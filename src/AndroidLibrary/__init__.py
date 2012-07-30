@@ -9,6 +9,36 @@ import robot
 from robot.variables import GLOBAL_VARIABLES
 from robot.api import logger
 
+if hasattr(subprocess, 'check_output'):
+    # Python >= 2.7
+    from subprocess import check_output as execute
+else:
+    # Python < 2.7
+    def execute(*popenargs, **kwargs):
+        if 'stdout' in kwargs:
+            raise ValueError('stdout argument not allowed, it will be overridden.')
+        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+        output, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            cmd = kwargs.get("args")
+            if cmd is None:
+                cmd = popenargs[0]
+            raise subprocess.CalledProcessError(retcode, cmd, output=output)
+        return output
+
+    class CalledProcessError(Exception):
+        def __init__(self, returncode, cmd, output=None):
+            self.returncode = returncode
+            self.cmd = cmd
+            self.output = output
+        def __str__(self):
+            return "Command '%s' returned non-zero exit status %d" % (
+                self.cmd, self.returncode)
+    # overwrite CalledProcessError due to `output` keyword might be not available
+    subprocess.CalledProcessError = CalledProcessError
+
+
 class AndroidLibrary(object):
 
     ROBOT_LIBRARY_SCOPE = 'GLOBAL'
@@ -43,26 +73,22 @@ class AndroidLibrary(object):
         self._package_name = package_name
 
     def install_apk(self, test_apk_path, app_apk_path):
-        execute = subprocess.check_output
-
         execute([self._adb, "uninstall", "%s.test" % self._package_name])
         execute([self._adb, "uninstall", self._package_name])
         execute([self._adb, "install", "-r", test_apk_path])
         execute([self._adb, "install", "-r", app_apk_path])
 
     def wait_for_device(self):
-        subprocess.check_output([self._adb, 'wait-for-device'])
+        execute([self._adb, 'wait-for-device'])
 
     def send_key_event(self, key_code):
-        subprocess.check_output([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
+        execute([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
 
     def press_menu_button(self):
         self.send_key_event(82)
 
     def start_testserver(self, port=34777):
-        execute = subprocess.check_output
-
-        subprocess.check_output([
+        execute([
           self._adb,
           "forward",
           "tcp:%d" % port,

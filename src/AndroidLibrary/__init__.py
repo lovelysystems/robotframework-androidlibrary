@@ -5,6 +5,12 @@ import json
 import telnetlib
 import os
 
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+execfile(os.path.join(THIS_DIR, 'version.py'))
+
+__version__ = VERSION
+
 import robot
 from robot.variables import GLOBAL_VARIABLES
 from robot.api import logger
@@ -41,6 +47,7 @@ else:
 
 class AndroidLibrary(object):
 
+    ROBOT_LIBRARY_VERSION = VERSION
     ROBOT_LIBRARY_SCOPE = 'GLOBAL'
 
     def __init__(self, android_sdk_path):

@@ -14,6 +14,9 @@ instrumented Android application similar to how `Selenium WebDriver
 Installation
 ++++++++++++
 
+To install, just fetch the latest version from PyPI::
+
+    pip install --upgrade robotframework-androidlibrary
 
 
 License

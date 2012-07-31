@@ -1,0 +1,78 @@
+*** Settings ***
+
+Library           AndroidLibrary          ${ANDROID_HOME}
+
+Suite Setup       Setup Emulator
+Suite Teardown    Stop Emulator
+
+Test Setup        Setup Test
+
+Documentation     Tests the ApiDemos.apk that is included in the Android SDK
+...
+...               See DEVELOPMENT.rst on the prerequisites of how to run this
+
+*** Keywords ***
+
+Setup Emulator
+    Start Emulator                 my_funky_emulator
+
+    Set Package Name              com.example.android.apis
+
+    Wait For Device
+    Install APK
+    ...                           ${APIDEMOS_PATH}/features/support/Test.apk
+    ...                           ${APIDEMOS_PATH}/ApiDemos.apk
+
+
+Setup Test
+    Wait For Device
+    Press Menu Button
+    Start Testserver
+
+    Wait Until Keyword Succeeds
+    ...  1min
+    ...  5sec
+    ...  Connect To Testserver
+
+*** Test Cases ***
+
+Screen contains text
+    Capture Screenshot
+
+    Screen Should Contain           App
+
+Screen does not contain text
+    Capture Screenshot
+
+    Screen Should Not Contain       Hoschi
+
+Touch Text
+    Capture Screenshot
+
+    Touch Text                      Text
+    Capture Screenshot
+
+    Touch Text                      Linkify
+    Capture Screenshot
+
+    Screen Should Contain           http
+    Capture Screenshot
+
+Scroll a bit
+    Capture Screenshot
+
+    Touch Text                      Views
+    Capture Screenshot
+
+    Touch Text                      ScrollBars
+    Capture Screenshot
+
+    Touch Text                      2. Fancy
+    Capture Screenshot
+
+    Scroll Down
+    Capture Screenshot
+
+    Scroll Up
+    Capture Screenshot
+

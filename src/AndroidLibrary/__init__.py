@@ -50,12 +50,18 @@ class AndroidLibrary(object):
     ROBOT_LIBRARY_VERSION = VERSION
     ROBOT_LIBRARY_SCOPE = 'GLOBAL'
 
-    def __init__(self, android_sdk_path):
+    def __init__(self, ANDROID_HOME=None):
+        '''
+        Path to the Android SDK. Optional if the $ANDROID_HOME environment variable is set.
+        '''
 
-        self._android_sdk_path = android_sdk_path
+        if ANDROID_HOME is None:
+            ANDROID_HOME = os.environ['ANDROID_HOME']
+
+        self._ANDROID_HOME = ANDROID_HOME
         self._screenshot_index = 0
 
-        sdk_path = lambda suffix: os.path.abspath(os.path.join(self._android_sdk_path, suffix))
+        sdk_path = lambda suffix: os.path.abspath(os.path.join(self._ANDROID_HOME, suffix))
 
         self._adb = sdk_path('platform-tools/adb')
         self._emulator = sdk_path('tools/emulator')
@@ -63,7 +69,13 @@ class AndroidLibrary(object):
         assert os.path.exists(self._adb), "Couldn't find adb binary at %s" % self._adb
         assert os.path.exists(self._adb), "Couldn't find emulator binary at %s" % self._emulator
 
-    def start_android_emulator(self, avd_name, no_window=False):
+    def start_emulator(self, avd_name, no_window=False):
+        '''
+        Starts the Android Emulator.
+
+        `avd_name` Identifier of the Android Virtual Device, for valid values on your machine run "$ANDROID_HOME/tools/android list avd|grep Name`
+        `no_window` Set to True to start the emulator without GUI, useful for headless environments.
+        '''
         cmd = [self._emulator, '-avd', avd_name]
 
         if no_window:
@@ -71,7 +83,10 @@ class AndroidLibrary(object):
 
         self._emulator_proc = subprocess.Popen(cmd)
 
-    def stop_android_emulator(self):
+    def stop_emulator(self):
+        '''
+        Halts a previously started Android Emulator.
+        '''
         self._emulator_proc.terminate()
         self._emulator_proc.kill()
         self._emulator_proc.wait()
@@ -80,25 +95,48 @@ class AndroidLibrary(object):
         self._package_name = package_name
 
     def install_apk(self, test_apk_path, app_apk_path):
+        '''
+        Installs the given Android application package file (APK) on the emulator along with the test server.
+
+        For instrumentation (and thus all remote keywords to work) both .apk
+        files must be signed with the same key.
+
+        `test_apk_path` Path to the Test.apk, usually at 'features/support/Test.apk'
+        `app_apk_path` Path the the application you want to test
+        '''
         execute([self._adb, "uninstall", "%s.test" % self._package_name])
         execute([self._adb, "uninstall", self._package_name])
         execute([self._adb, "install", "-r", test_apk_path])
         execute([self._adb, "install", "-r", app_apk_path])
 
     def wait_for_device(self):
+        '''
+        Wait for the device to become available
+        '''
         execute([self._adb, 'wait-for-device'])
 
-    def send_key_event(self, key_code):
+    def send_key(self, key_code):
+        '''
+        Send key event with the given key code. See http://developer.android.com/reference/android/view/KeyEvent.html for a list of available key codes.
+
+        `key_code` The key code to send
+        '''
         execute([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
 
     def press_menu_button(self):
-        self.send_key_event(82)
+        '''
+        Press the menu button ("KEYCODE_MENU"), same as '| Send Key | 82 |'
+        '''
+        self.send_key(82)
 
-    def start_testserver(self, port=34777):
+    def start_testserver(self):
+        '''
+        Start the remote test server inside the Android Application.
+        '''
         execute([
           self._adb,
           "forward",
-          "tcp:%d" % port,
+          "tcp:%d" % 34777,
           "tcp:7101"
         ])
 
@@ -115,7 +153,15 @@ class AndroidLibrary(object):
         ])
 
 
-    def connect_to_testserver(self, host='localhost', port=34777):
+    def connect_to_testserver(self):
+        '''
+        Connect to the previously started test server inside the Android
+        Application. Performs a handshake.
+        '''
+
+        host = 'localhost'
+        port = 34777
+
         self._connection = telnetlib.Telnet(host, port)
 
         # secret calabash handshake
@@ -155,6 +201,14 @@ class AndroidLibrary(object):
     # END: STOLEN FROM SELENIUM2LIBRARY
 
     def capture_screenshot(self, filename=None):
+        '''
+        Captures a screenshot of the current screen and embeds it in the test report
+
+        Also works in headless environments.
+
+        `filename` Location where the screenshot will be saved.
+        '''
+
         path, link = self._get_screenshot_paths(filename)
 
         jar = os.path.join(os.path.dirname(__file__), 'screenShotTaker.jar')
@@ -162,15 +216,67 @@ class AndroidLibrary(object):
         screenshot_taking_proc = subprocess.Popen(
           ["java", "-jar", jar, path],
           env={
-            "ANDROID_HOME": self._android_sdk_path
+            "ANDROID_HOME": self._ANDROID_HOME
           }
         )
+        screenshot_taking_proc.wait()
 
         logger.info('</td></tr><tr><td colspan="3"><a href="%s">'
                    '<img src="%s"></a>' % (link, link), True, False)
 
-    def screen_contains_text(self, text):
-        result = self._perform_action("wait_for_text", text)
+    def screen_should_contain(self, text):
+        '''
+        Asserts that the current screen contains a given text
+
+        `text` String that should be on the current screen
+        '''
+        result = self._perform_action("assert_text", text, True)
         assert result["success"] == True, "Screen does not contain text '%s': %s" % (
+                text, result.get('message', 'No specific error message given'))
+
+    def screen_should_not_contain(self, text):
+        '''
+        Asserts that the current screen does not contain a given text
+
+        `text` String that should not be on the current screen
+        '''
+        result = self._perform_action("assert_text", text, False)
+        assert result["success"] == True, "Screen does contain text '%s', but shouldn't have: %s" % (
+                text, result.get('message', 'No specific error message given'))
+
+    def touch_button(self, text):
+        '''
+        Touch an android.widget.Button
+
+        `text` is the text the button that will be clicked contains
+        '''
+        result = self._perform_action("press_button_with_text", text)
+        assert result["success"] == True, "GNAH! '%s': %s" % (
+                text, result.get('message', 'No specific error message given'))
+
+    def touch_text(self, text):
+        '''
+        Touch an android.widget.Button
+
+        `text` is the text the button that will be clicked contains
+        '''
+        result = self._perform_action("click_on_text", text)
+        assert result["success"] == True, "GNAH! '%s': %s" % (
+                text, result.get('message', 'No specific error message given'))
+
+    def scroll_up(self):
+        '''
+        Scroll up
+        '''
+        result = self._perform_action("scroll_up")
+        assert result["success"] == True, "GNAH! '%s': %s" % (
+                text, result.get('message', 'No specific error message given'))
+
+    def scroll_down(self):
+        '''
+        Scroll down
+        '''
+        result = self._perform_action("scroll_down")
+        assert result["success"] == True, "GNAH! '%s': %s" % (
                 text, result.get('message', 'No specific error message given'))
 

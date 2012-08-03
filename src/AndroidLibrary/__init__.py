@@ -69,6 +69,11 @@ class AndroidLibrary(object):
         assert os.path.exists(self._adb), "Couldn't find adb binary at %s" % self._adb
         assert os.path.exists(self._adb), "Couldn't find emulator binary at %s" % self._emulator
 
+    def _execute(self, args, **kwargs):
+        logging.debug("$> %s", ' '.join(args))
+        output = execute(args, **kwargs)
+        logging.debug(output)
+
     def start_emulator(self, avd_name, no_window=False):
         '''
         Starts the Android Emulator.
@@ -104,16 +109,16 @@ class AndroidLibrary(object):
         `test_apk_path` Path to the Test.apk, usually at 'features/support/Test.apk'
         `app_apk_path` Path the the application you want to test
         '''
-        execute([self._adb, "uninstall", "%s.test" % self._package_name])
-        execute([self._adb, "uninstall", self._package_name])
-        execute([self._adb, "install", "-r", test_apk_path])
-        execute([self._adb, "install", "-r", app_apk_path])
+        self._execute([self._adb, "uninstall", "%s.test" % self._package_name])
+        self._execute([self._adb, "uninstall", self._package_name])
+        self._execute([self._adb, "install", "-r", test_apk_path])
+        self._execute([self._adb, "install", "-r", app_apk_path])
 
     def wait_for_device(self):
         '''
         Wait for the device to become available
         '''
-        execute([self._adb, 'wait-for-device'])
+        self._execute([self._adb, 'wait-for-device'])
 
     def send_key(self, key_code):
         '''
@@ -121,7 +126,7 @@ class AndroidLibrary(object):
 
         `key_code` The key code to send
         '''
-        execute([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
+        self._execute([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
 
     def press_menu_button(self):
         '''
@@ -133,14 +138,14 @@ class AndroidLibrary(object):
         '''
         Start the remote test server inside the Android Application.
         '''
-        execute([
+        self._execute([
           self._adb,
           "forward",
           "tcp:%d" % 34777,
           "tcp:7101"
         ])
 
-        self._testserver_proc = subprocess.Popen([
+        args = [
           self._adb,
           "shell",
           "am",
@@ -150,7 +155,10 @@ class AndroidLibrary(object):
           "class",
           "sh.calaba.instrumentationbackend.InstrumentationBackend",
           "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % self._package_name,
-        ])
+        ]
+
+        logging.debug("$> %s", ' '.join(args))
+        self._testserver_proc = subprocess.Popen(args)
 
 
     def connect_to_testserver(self):
@@ -213,13 +221,20 @@ class AndroidLibrary(object):
 
         jar = os.path.join(os.path.dirname(__file__), 'screenShotTaker.jar')
 
-        screenshot_taking_proc = subprocess.Popen(
-          ["java", "-jar", jar, path],
-          env={
+        args = ["java", "-jar", jar, path]
+
+        logging.debug("$> %s", ' '.join(args))
+
+        screenshot_taking_proc = subprocess.Popen(args, env={
             "ANDROID_HOME": self._ANDROID_HOME
-          }
-        )
-        screenshot_taking_proc.wait()
+        })
+        # TODO the screenshot taking command does not terminate if there is an
+        # error (such as a too small timeout)
+
+        # details see
+        # https://github.com/calabash/calabash-android/issues/69
+
+        # screenshot_taking_proc.wait()
 
         logger.info('</td></tr><tr><td colspan="3"><a href="%s">'
                    '<img src="%s"></a>' % (link, link), True, False)

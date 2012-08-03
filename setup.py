@@ -28,5 +28,6 @@ setup(
   classifiers      = CLASSIFIERS.splitlines(),
   package_dir      = {'' : 'src'},
   install_requires = ['robotframework'],
-  packages         = ['AndroidLibrary']
+  packages         = ['AndroidLibrary'],
+  package_data     = {'AndroidLibrary': ['src/AndroidLibrary/*.jar']}
 )

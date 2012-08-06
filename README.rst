@@ -18,6 +18,20 @@ To install, just fetch the latest version from PyPI::
 
     pip install --upgrade robotframework-androidlibrary
 
+Prepare your App
+++++++++++++++++
+
+robotframework-androidlibrary works only with::
+
+    calabash-android 0.1.0
+
+
+To install calabash-android::
+
+    gem install --version '= 0.1.0' calabash-android
+
+To prepare your android app look at  <https://github.com/calabash/calabash-android#installation>
+
 
 License
 +++++++

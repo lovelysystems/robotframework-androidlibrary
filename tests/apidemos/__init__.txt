@@ -1,0 +1,81 @@
+*** Settings ***
+
+Resource          variables.txt
+
+Library           AndroidLibrary
+Library           OperatingSystem
+
+Suite Setup       Setup Suite
+Suite Teardown    Stop Emulator
+
+Documentation     Tests the ApiDemos.apk that is included in the Android SDK
+
+*** Keywords ***
+
+Execute    [Arguments]    ${command}
+    ${rc}  ${output} =    Run And Return Rc And Output    ${command}
+    Should Be Equal As Integers    ${rc}    0
+
+Setup Suite
+
+    Android SDK Should Exist
+    Update Android SDK
+    Create Android Virtual Device
+
+    ${HEADLESS_BOOL}=             Convert To Boolean        ${HEADLESS}
+    Start Emulator                ${EMULATOR_NAME}          no_window=${HEADLESS_BOOL}
+
+    Pull ApiDemos.apk from Device
+    Re-Sign ApiDemos.apk with Debug Keystore
+    Build Instrumentation App
+
+    Wait Until Keyword Succeeds   1m  5s  Install App
+
+    Stop Emulator
+
+Android SDK Should Exist
+    [Documentation]               simple sanity check to see if %{ANDROID_HOME} was set correctly
+    File Should Exist             %{ANDROID_HOME}/tools/android
+
+Update Android SDK
+    Execute                       %{ANDROID_HOME}/tools/android update sdk -t android-${API_LEVEL} --no-ui
+
+Create Android Virtual Device
+    Execute                       echo "no" | %{ANDROID_HOME}/tools/android --silent create avd --name ${EMULATOR_NAME} --force -t android-${API_LEVEL}
+
+Pull ApiDemos.apk from Device
+    [Timeout]                     120s
+    Wait For Device
+    Remove File                   ApiDemos.apk
+    Execute                       %{ANDROID_HOME}/platform-tools/adb pull /data/app/ApiDemos.apk
+
+Re-Sign ApiDemos.apk with Debug Keystore
+    File Should Exist             ApiDemos.apk
+    Execute                       zip -d ApiDemos.apk META-INF/*
+    Execute                       echo "android" | jarsigner -verbose -keystore $HOME/.android/debug.keystore ApiDemos.apk androiddebugkey
+
+Build Instrumentation App
+    Remove File                   .calabash_settings
+    ${settings}=                  Catenate
+    ...                           {
+    ...                             "activity_name": "com.example.android.apis.ApiDemos", 
+    ...                             "api_level": "${API_LEVEL}", 
+    ...                             "app_path": "%{PWD}/ApiDemos.apk", 
+    ...                             "keystore_alias": "androiddebugkey", 
+    ...                             "keystore_alias_password": "debug", 
+    ...                             "keystore_location": "%{HOME}/.android/debug.keystore", 
+    ...                             "keystore_password": "android", 
+    ...                             "package_name": "com.example.android.apis"
+    ...                           }
+    Set Package Name              com.example.android.apis
+    Create File                   .calabash_settings           ${settings}
+    Execute                       calabash-android build
+
+Install App
+    [Timeout]                     120s
+    Wait for Device
+
+    Install APK
+    ...                           ${EXECDIR}/features/support/Test.apk
+    ...                           ${EXECDIR}/ApiDemos.apk
+

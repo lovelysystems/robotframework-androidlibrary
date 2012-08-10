@@ -73,6 +73,7 @@ class AndroidLibrary(object):
         logging.debug("$> %s", ' '.join(args))
         output = execute(args, **kwargs)
         logging.debug(output)
+        return output
 
     def start_emulator(self, avd_name, no_window=False):
         '''
@@ -81,20 +82,29 @@ class AndroidLibrary(object):
         `avd_name` Identifier of the Android Virtual Device, for valid values on your machine run "$ANDROID_HOME/tools/android list avd|grep Name`
         `no_window` Set to True to start the emulator without GUI, useful for headless environments.
         '''
-        cmd = [self._emulator, '-avd', avd_name]
+        args = [self._emulator, '-avd', avd_name]
 
         if no_window:
-            cmd.append('-no-window')
+            args.append('-no-window')
 
-        self._emulator_proc = subprocess.Popen(cmd)
+        logging.debug("$> %s", ' '.join(args))
+
+        self._emulator_proc = subprocess.Popen(args)
 
     def stop_emulator(self):
         '''
         Halts a previously started Android Emulator.
         '''
+
+        if not hasattr(self, '_emulator_proc'):
+            logging.warn("Could not stop Android Emulator: It was not started.")
+            return
+
         self._emulator_proc.terminate()
         self._emulator_proc.kill()
         self._emulator_proc.wait()
+
+        self._emulator_proc = None
 
     def set_package_name(self, package_name):
         self._package_name = package_name
@@ -109,10 +119,16 @@ class AndroidLibrary(object):
         `test_apk_path` Path to the Test.apk, usually at 'features/support/Test.apk'
         `app_apk_path` Path the the application you want to test
         '''
-        self._execute([self._adb, "uninstall", "%s.test" % self._package_name])
-        self._execute([self._adb, "uninstall", self._package_name])
-        self._execute([self._adb, "install", "-r", test_apk_path])
-        self._execute([self._adb, "install", "-r", app_apk_path])
+
+        def execute_and_output_does_not_contain_error(*args):
+            output = self._execute(*args)
+            assert 'Error' not in output, output
+            return output
+
+        execute_and_output_does_not_contain_error([self._adb, "uninstall", "%s.test" % self._package_name])
+        execute_and_output_does_not_contain_error([self._adb, "uninstall", self._package_name])
+        execute_and_output_does_not_contain_error([self._adb, "install", "-r", test_apk_path])
+        execute_and_output_does_not_contain_error([self._adb, "install", "-r", app_apk_path])
 
     def wait_for_device(self):
         '''

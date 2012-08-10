@@ -1,0 +1,7 @@
+*** Variables ***
+
+${EMULATOR_NAME}=   robotframework-androidlibrary-emulator
+${API_LEVEL}=       8
+${SKIP_SETUP}=      False
+${HEADLESS}=        True
+

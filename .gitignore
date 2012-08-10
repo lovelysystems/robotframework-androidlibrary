@@ -7,3 +7,9 @@ parts/
 src/robotframework_androidlibrary.egg-info/
 features/
 develop-eggs/robotframework-androidlibrary.egg-link
+.calabash_settings
+android-screenshot-*.png
+log.html
+output.xml
+report.html
+ApiDemos.apk

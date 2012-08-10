@@ -1,34 +1,24 @@
 *** Settings ***
 
-Library           AndroidLibrary          ${ANDROID_HOME}
+Resource          variables.txt
 
-Suite Setup       Setup Emulator
-Suite Teardown    Stop Emulator
+Library           AndroidLibrary
 
+Suite Setup       Setup Suite
 Test Setup        Setup Test
 
-Documentation     Tests the ApiDemos.apk that is included in the Android SDK
-...
-...               See DEVELOPMENT.rst on the prerequisites of how to run this
+Test Timeout      2 minutes
 
 *** Keywords ***
 
-Setup Emulator
-    Start Emulator                 my_funky_emulator
-
-    Set Package Name              com.example.android.apis
-
-    Wait For Device
-    Install APK
-    ...                           ${APIDEMOS_PATH}/features/support/Test.apk
-    ...                           ${APIDEMOS_PATH}/ApiDemos.apk
-
-
-Setup Test
+Setup Suite
+    ${HEADLESS_BOOL}=             Convert To Boolean        ${HEADLESS}
+    Start Emulator                ${EMULATOR_NAME}          no_window=${HEADLESS_BOOL}
     Wait For Device
     Press Menu Button
-    Start Testserver
 
+Setup Test
+    Start Testserver
     Wait Until Keyword Succeeds
     ...  1min
     ...  5sec

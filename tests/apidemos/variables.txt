@@ -5,3 +5,13 @@ ${API_LEVEL}=       8
 ${SKIP_SETUP}=      False
 ${HEADLESS}=        True
 
+*** Settings ***
+
+Library             OperatingSystem
+
+*** Keywords ***
+
+Execute    [Arguments]    ${command}
+    ${rc}  ${output} =    Run And Return Rc And Output    ${command}
+    Should Be Equal As Integers    ${rc}    0
+

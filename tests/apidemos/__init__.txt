@@ -5,16 +5,12 @@ Resource          variables.txt
 Library           AndroidLibrary
 Library           OperatingSystem
 
-Suite Setup       Setup Suite
-Suite Teardown    Stop Emulator
+#Suite Setup       Setup Suite
+#Suite Teardown    Stop Emulator
 
 Documentation     Tests the ApiDemos.apk that is included in the Android SDK
 
 *** Keywords ***
-
-Execute    [Arguments]    ${command}
-    ${rc}  ${output} =    Run And Return Rc And Output    ${command}
-    Should Be Equal As Integers    ${rc}    0
 
 Setup Suite
 
@@ -29,7 +25,7 @@ Setup Suite
     Re-Sign ApiDemos.apk with Debug Keystore
     Build Instrumentation App
 
-    Wait Until Keyword Succeeds   1m  5s  Install App
+    Install App
 
     Stop Emulator
 
@@ -44,10 +40,15 @@ Create Android Virtual Device
     Execute                       echo "no" | %{ANDROID_HOME}/tools/android --silent create avd --name ${EMULATOR_NAME} --force -t android-${API_LEVEL}
 
 Pull ApiDemos.apk from Device
-    [Timeout]                     120s
-    Wait For Device
+    [Timeout]                     2 minutes
+
+    Wait Until Keyword Succeeds   5 seconds  30 seconds
+    ...                           Wait For Device
+
     Remove File                   ApiDemos.apk
-    Execute                       %{ANDROID_HOME}/platform-tools/adb pull /data/app/ApiDemos.apk
+
+    Wait Until Keyword Succeeds   5 seconds  30 seconds
+    ...  Execute                  %{ANDROID_HOME}/platform-tools/adb pull /data/app/ApiDemos.apk
 
 Re-Sign ApiDemos.apk with Debug Keystore
     File Should Exist             ApiDemos.apk
@@ -55,27 +56,26 @@ Re-Sign ApiDemos.apk with Debug Keystore
     Execute                       echo "android" | jarsigner -verbose -keystore $HOME/.android/debug.keystore ApiDemos.apk androiddebugkey
 
 Build Instrumentation App
-    Remove File                   .calabash_settings
-    ${settings}=                  Catenate
-    ...                           {
-    ...                             "activity_name": "com.example.android.apis.ApiDemos", 
-    ...                             "api_level": "${API_LEVEL}", 
-    ...                             "app_path": "%{PWD}/ApiDemos.apk", 
-    ...                             "keystore_alias": "androiddebugkey", 
-    ...                             "keystore_alias_password": "debug", 
-    ...                             "keystore_location": "%{HOME}/.android/debug.keystore", 
-    ...                             "keystore_password": "android", 
-    ...                             "package_name": "com.example.android.apis"
-    ...                           }
-    Set Package Name              com.example.android.apis
-    Create File                   .calabash_settings           ${settings}
-    Execute                       calabash-android build
+    Remove Directory              ${EXECDIR}/test_servers/                 recursive=True
+    Execute                       calabash-android build ApiDemos.apk
+
+    ${TEST_SERVERS}=              List Directory    ${EXECDIR}/test_servers/
+    Set Global Variable           ${TEST_APK}       ${TEST_SERVERS[0]}
 
 Install App
-    [Timeout]                     120s
+    [Timeout]                     2 minutes
+
     Wait for Device
 
-    Install APK
-    ...                           ${EXECDIR}/features/support/Test.apk
-    ...                           ${EXECDIR}/ApiDemos.apk
+    Wait Until Keyword Succeeds   5 seconds  30 seconds
+    ...  Uninstall Application    com.example.android.apis
+
+    Wait Until Keyword Succeeds   5 seconds  30 seconds
+    ...  Uninstall Application    com.example.android.apis.test
+
+    Wait Until Keyword Succeeds   5 seconds  30 seconds
+    ...  Install Application      ${EXECDIR}/test_servers/${TEST_APK}
+
+    Wait Until Keyword Succeeds   5 seconds  30 seconds
+    ...  Install Application      ${EXECDIR}/ApiDemos.apk
 

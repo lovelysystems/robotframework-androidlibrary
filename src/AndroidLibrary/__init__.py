@@ -1,10 +1,8 @@
+import json
 import logging
 import os
 import subprocess
-import json
-import telnetlib
-import os
-
+import requests
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 execfile(os.path.join(THIS_DIR, 'version.py'))
@@ -106,29 +104,28 @@ class AndroidLibrary(object):
 
         self._emulator_proc = None
 
-    def set_package_name(self, package_name):
-        self._package_name = package_name
+    def _execute_and_output_does_not_contain_error(self, *args):
+        output = self._execute(*args)
+        assert 'Error' not in output, output
+        return output
 
-    def install_apk(self, test_apk_path, app_apk_path):
+    def uninstall_application(self, package_name):
+        self._execute_and_output_does_not_contain_error([self._adb, "uninstall", package_name])
+
+    def install_application(self, apk_file):
         '''
         Installs the given Android application package file (APK) on the emulator along with the test server.
 
         For instrumentation (and thus all remote keywords to work) both .apk
         files must be signed with the same key.
 
-        `test_apk_path` Path to the Test.apk, usually at 'features/support/Test.apk'
-        `app_apk_path` Path the the application you want to test
+        `apk_file` Path the the application to install
         '''
 
-        def execute_and_output_does_not_contain_error(*args):
-            output = self._execute(*args)
-            assert 'Error' not in output, output
-            return output
+        # TODO polling for package manager
+        # http://code.google.com/p/android/issues/detail?id=842#c7
 
-        execute_and_output_does_not_contain_error([self._adb, "uninstall", "%s.test" % self._package_name])
-        execute_and_output_does_not_contain_error([self._adb, "uninstall", self._package_name])
-        execute_and_output_does_not_contain_error([self._adb, "install", "-r", test_apk_path])
-        execute_and_output_does_not_contain_error([self._adb, "install", "-r", app_apk_path])
+        self._execute_and_output_does_not_contain_error([self._adb, "install", "-r", apk_file])
 
     def wait_for_device(self):
         '''
@@ -150,19 +147,24 @@ class AndroidLibrary(object):
         '''
         self.send_key(82)
 
-    def start_testserver(self):
+    def start_testserver(self, package_name):
         '''
         Start the remote test server inside the Android Application.
+
+        `package_name` fully qualified name of the application to test
+
         '''
         self._execute([
           self._adb,
+          "wait-for-device",
           "forward",
           "tcp:%d" % 34777,
-          "tcp:7101"
+          "tcp:7102"
         ])
 
         args = [
           self._adb,
+          "wait-for-device",
           "shell",
           "am",
           "instrument",
@@ -170,8 +172,12 @@ class AndroidLibrary(object):
           "-e",
           "class",
           "sh.calaba.instrumentationbackend.InstrumentationBackend",
-          "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % self._package_name,
+          "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % package_name,
         ]
+
+        self._host = 'localhost'
+        self._port = 34777
+        self._url = 'http://%s:%d' % (self._host, self._port)
 
         logging.debug("$> %s", ' '.join(args))
         self._testserver_proc = subprocess.Popen(args)
@@ -183,25 +189,27 @@ class AndroidLibrary(object):
         Application. Performs a handshake.
         '''
 
-        host = 'localhost'
-        port = 34777
+        response = requests.get(self._url + '/ping')
 
-        self._connection = telnetlib.Telnet(host, port)
-
-        # secret calabash handshake
-        self._connection.write("Ping!\n")
-        self._connection.read_until("Pong!\n")
+        assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
+        assert response.text == 'pong', "InstrumentationBackend replied '%s', expected 'pong'" % response.text
 
     def _perform_action(self, command, *arguments):
         action = json.dumps({
           "command": command,
           "arguments": arguments,
-        }) + '\n'
+        })
+
         logging.debug(">> %r", action)
-        self._connection.write(action)
-        result = self._connection.read_until('\n')
-        logging.debug("<< %r", result)
-        return json.loads(result)
+
+        response = requests.post(self._url,
+          data = { 'command': action },
+          headers = { 'Content-Type': 'application/x-www-form-urlencoded' },
+        )
+
+        logging.debug("<< %r", response.text)
+        assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
+        return response.json
 
     # BEGIN: STOLEN FROM SELENIUM2LIBRARY
 
@@ -234,23 +242,13 @@ class AndroidLibrary(object):
         '''
 
         path, link = self._get_screenshot_paths(filename)
+        response = requests.get(self._url + '/screenshot')
 
-        jar = os.path.join(os.path.dirname(__file__), 'screenShotTaker.jar')
+        with open(path, 'w') as f:
+            f.write(response.content)
+            f.close()
 
-        args = ["java", "-jar", jar, path]
-
-        logging.debug("$> %s", ' '.join(args))
-
-        screenshot_taking_proc = subprocess.Popen(args, env={
-            "ANDROID_HOME": self._ANDROID_HOME
-        })
-        # TODO the screenshot taking command does not terminate if there is an
-        # error (such as a too small timeout)
-
-        # details see
-        # https://github.com/calabash/calabash-android/issues/69
-
-        # screenshot_taking_proc.wait()
+        assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
 
         logger.info('</td></tr><tr><td colspan="3"><a href="%s">'
                    '<img src="%s"></a>' % (link, link), True, False)

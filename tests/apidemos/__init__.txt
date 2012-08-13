@@ -5,8 +5,8 @@ Resource          variables.txt
 Library           AndroidLibrary
 Library           OperatingSystem
 
-#Suite Setup       Setup Suite
-#Suite Teardown    Stop Emulator
+Suite Setup       Setup Suite
+Suite Teardown    Stop Emulator
 
 Documentation     Tests the ApiDemos.apk that is included in the Android SDK
 

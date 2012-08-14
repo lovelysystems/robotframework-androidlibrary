@@ -19,9 +19,7 @@ Setup Suite
     Execute                       %{ANDROID_HOME}/platform-tools/adb shell setprop log.redirect-stdio true
 
 Setup Test
-    Start Testserver            com.example.android.apis
-
-    Sleep   5 seconds
+    Start Testserver              com.example.android.apis
 
     Wait Until Keyword Succeeds
     ...  1min

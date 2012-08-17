@@ -40,14 +40,13 @@ Create Android Virtual Device
     Execute                       echo "no" | %{ANDROID_HOME}/tools/android --silent create avd --name ${EMULATOR_NAME} --force -t android-${API_LEVEL}
 
 Pull ApiDemos.apk from Device
-    [Timeout]                     2 minutes
+    [Timeout]                     3 minutes
 
-    Wait Until Keyword Succeeds   5 seconds  30 seconds
-    ...                           Wait For Device
+    Wait For Device
 
     Remove File                   ApiDemos.apk
 
-    Wait Until Keyword Succeeds   5 seconds  30 seconds
+    Wait Until Keyword Succeeds   30 seconds  5 seconds
     ...  Execute                  %{ANDROID_HOME}/platform-tools/adb pull /data/app/ApiDemos.apk
 
 Re-Sign ApiDemos.apk with Debug Keystore
@@ -63,19 +62,15 @@ Build Instrumentation App
     Set Global Variable           ${TEST_APK}       ${TEST_SERVERS[0]}
 
 Install App
-    [Timeout]                     2 minutes
+    [Timeout]                     3 minutes
 
     Wait for Device
 
-    Wait Until Keyword Succeeds   5 seconds  30 seconds
-    ...  Uninstall Application    com.example.android.apis
+    Uninstall Application    com.example.android.apis
 
-    Wait Until Keyword Succeeds   5 seconds  30 seconds
-    ...  Uninstall Application    com.example.android.apis.test
+    Uninstall Application    com.example.android.apis.test
 
-    Wait Until Keyword Succeeds   5 seconds  30 seconds
-    ...  Install Application      ${EXECDIR}/test_servers/${TEST_APK}
+    Install Application      ${EXECDIR}/test_servers/${TEST_APK}
 
-    Wait Until Keyword Succeeds   5 seconds  30 seconds
-    ...  Install Application      ${EXECDIR}/ApiDemos.apk
+    Install Application      ${EXECDIR}/ApiDemos.apk
 

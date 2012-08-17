@@ -342,6 +342,6 @@ class AndroidLibrary(object):
 
         assert strategy == "css"
 
-        result = self._perform_action("click_by_selector", locator)
+        result = self._perform_action("touch", strategy, query)
         assert result["success"] == True, "GNAH! '%r'" % result
 

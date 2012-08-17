@@ -6,6 +6,7 @@ Library           AndroidLibrary
 
 Suite Setup       Setup Suite
 Test Setup        Setup Test
+Test Teardown     Stop Testserver
 
 Test Timeout      2 minutes
 
@@ -16,7 +17,6 @@ Setup Suite
     Start Emulator                ${EMULATOR_NAME}          no_window=${HEADLESS_BOOL}
     Wait For Device
     Press Menu Button
-    Execute                       %{ANDROID_HOME}/platform-tools/adb shell setprop log.redirect-stdio true
 
 Setup Test
     Start Testserver              com.example.android.apis

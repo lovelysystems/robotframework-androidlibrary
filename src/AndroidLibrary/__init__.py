@@ -13,35 +13,8 @@ import robot
 from robot.variables import GLOBAL_VARIABLES
 from robot.api import logger
 
-if hasattr(subprocess, 'check_output'):
-    # Python >= 2.7
-    from subprocess import check_output as execute
-else:
-    # Python < 2.7
-    def execute(*popenargs, **kwargs):
-        if 'stdout' in kwargs:
-            raise ValueError('stdout argument not allowed, it will be overridden.')
-        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-        output, unused_err = process.communicate()
-        retcode = process.poll()
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-            raise subprocess.CalledProcessError(retcode, cmd, output=output)
-        return output
-
-    class CalledProcessError(Exception):
-        def __init__(self, returncode, cmd, output=None):
-            self.returncode = returncode
-            self.cmd = cmd
-            self.output = output
-        def __str__(self):
-            return "Command '%s' returned non-zero exit status %d" % (
-                self.cmd, self.returncode)
-    # overwrite CalledProcessError due to `output` keyword might be not available
-    subprocess.CalledProcessError = CalledProcessError
-
+import killableprocess
+import tempfile
 
 class AndroidLibrary(object):
 
@@ -66,12 +39,6 @@ class AndroidLibrary(object):
 
         assert os.path.exists(self._adb), "Couldn't find adb binary at %s" % self._adb
         assert os.path.exists(self._adb), "Couldn't find emulator binary at %s" % self._emulator
-
-    def _execute(self, args, **kwargs):
-        logging.debug("$> %s", ' '.join(args))
-        output = execute(args, **kwargs)
-        logging.debug(output)
-        return output
 
     def start_emulator(self, avd_name, no_window=False):
         '''
@@ -104,13 +71,62 @@ class AndroidLibrary(object):
 
         self._emulator_proc = None
 
-    def _execute_and_output_does_not_contain_error(self, *args):
-        output = self._execute(*args)
-        assert 'Error' not in output, output
-        return output
+
+    def _execute_with_timeout(self, cmd, max_attempts=3, max_timeout=20):
+        logging.debug("$> %s # with timeout %ds", ' '.join(cmd), max_timeout)
+
+        attempt = 0
+
+        while attempt < max_attempts:
+            attempt = attempt + 1
+            out = tempfile.NamedTemporaryFile(delete=False)
+            err = tempfile.NamedTemporaryFile(delete=False)
+            p = killableprocess.Popen(' '.join(cmd), shell=True, stdout=out, stderr=err)
+            p.wait(max_timeout)
+            out.flush()
+            out.close()
+            err.flush()
+            err.close()
+
+            # -9 and 127 are returned by killableprocess when a timeout happens
+            if  p.returncode == -9 or p.returncode == 127:
+                logging.warn("Executing %s failed executing in less then %d seconds and was killed, attempt number %d of %d" % (
+                    ' '.join(cmd), max_timeout, attempt, max_attempts))
+                continue
+
+        try:
+            outfile = open(out.name, 'r')
+            errfile = open(err.name, 'r')
+            return p.returncode, outfile.read(), errfile.read()
+        finally:
+            outfile.close()
+            os.unlink(out.name)
+            errfile.close()
+            os.unlink(errfile.name)
+
+    def _wait_for_package_manager(self):
+        attempts = 0
+        max_attempts = 3
+
+        while attempts < max_attempts:
+            rc, output, errput = self._execute_with_timeout([
+                self._adb, "wait-for-device", "shell", "pm", "path", "android"
+              ], max_timeout=10, max_attempts=3)
+            assert rc == 0, "Waiting for package manager failed: %d, %r, %r" % (rc, output, errput)
+
+            if not 'Could not access the Package Manager.' in output:
+                return
+
+        raise AssertionError(output)
 
     def uninstall_application(self, package_name):
-        self._execute_and_output_does_not_contain_error([self._adb, "uninstall", package_name])
+        self._wait_for_package_manager()
+
+        rc, output, errput = self._execute_with_timeout([self._adb, "uninstall", package_name])
+        assert rc == 0, "Uninstalling application failed: %d, %r" % (rc, output)
+        assert output != None
+        logging.debug(output)
+        assert 'Error' not in output, output
 
     def install_application(self, apk_file):
         '''
@@ -122,16 +138,20 @@ class AndroidLibrary(object):
         `apk_file` Path the the application to install
         '''
 
-        # TODO polling for package manager
-        # http://code.google.com/p/android/issues/detail?id=842#c7
+        self._wait_for_package_manager()
 
-        self._execute_and_output_does_not_contain_error([self._adb, "install", "-r", apk_file])
+        rc, output, errput = self._execute_with_timeout([self._adb, "install", "-r", apk_file])
+        logging.debug(output)
+        assert rc == 0, "Installing application failed: %d, %r" % (rc, output)
+        assert output != None
+        assert 'Error' not in output, output
 
-    def wait_for_device(self):
+    def wait_for_device(self, timeout=120):
         '''
         Wait for the device to become available
         '''
-        self._execute([self._adb, 'wait-for-device'])
+        rc, output, errput = self._execute_with_timeout([self._adb, 'wait-for-device'], max_timeout=timeout/3, max_attempts=3)
+        assert rc == 0, "wait for device application failed: %d, %r" % (rc, output)
 
     def send_key(self, key_code):
         '''
@@ -139,7 +159,8 @@ class AndroidLibrary(object):
 
         `key_code` The key code to send
         '''
-        self._execute([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
+        rc, output, errput = self._execute_with_timeout([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
+        assert rc == 0
 
     def press_menu_button(self):
         '''
@@ -154,7 +175,7 @@ class AndroidLibrary(object):
         `package_name` fully qualified name of the application to test
 
         '''
-        self._execute([
+        rc, output, errput = self._execute_with_timeout([
           self._adb,
           "wait-for-device",
           "forward",
@@ -182,6 +203,14 @@ class AndroidLibrary(object):
         logging.debug("$> %s", ' '.join(args))
         self._testserver_proc = subprocess.Popen(args)
 
+    def stop_testserver(self):
+        '''
+        Halts a previously started Android Emulator.
+        '''
+        response = requests.get(self._url + '/kill')
+
+        assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
+        assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'pong'" % response.text
 
     def connect_to_testserver(self):
         '''

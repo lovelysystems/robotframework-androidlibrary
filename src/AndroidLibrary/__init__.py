@@ -323,7 +323,7 @@ class AndroidLibrary(object):
             strategy = "css"
             query = locator
 
-        result = self._perform_action("set_text", strategy, locator)
+        result = self._perform_action("set_text", strategy, query, value)
 
         assert result["success"] == True, "GNAH! '%r'" % result
 

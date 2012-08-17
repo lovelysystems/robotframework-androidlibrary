@@ -338,3 +338,39 @@ class AndroidLibrary(object):
         assert result["success"] == True, "GNAH! '%s': %s" % (
                 text, result.get('message', 'No specific error message given'))
 
+    def set_webview_text(self, locator, value):
+        '''
+        Set the <input> field in the webview to the given value
+
+        `locator` the locator to find the element to change. Valid locators are in the form of css=#element_id or xpath=//input[0]
+        `value` the new value
+        '''
+
+        try:
+            strategy, query = locator.split("=")
+        except ValueError, e:
+            strategy = "css"
+            query = locator
+
+        result = self._perform_action("set_text", strategy, query, value)
+
+        assert result["success"] == True, "GNAH! '%r'" % result
+
+    def touch_webview_element(self, locator):
+        '''
+        Touch an element in a webview
+
+        `locator` locator for element to trigger a click event (only css locators are supported at the moment)
+        '''
+
+        try:
+            strategy, query = locator.split("=")
+        except ValueError, e:
+            strategy = "css"
+            query = locator
+
+        assert strategy == "css"
+
+        result = self._perform_action("touch", strategy, query)
+        assert result["success"] == True, "GNAH! '%r'" % result
+

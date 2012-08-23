@@ -111,7 +111,7 @@ class AndroidLibrary(object):
         while attempts < max_attempts:
             rc, output, errput = self._execute_with_timeout([
                 self._adb, "wait-for-device", "shell", "pm", "path", "android"
-              ], max_timeout=10, max_attempts=3)
+              ], max_timeout=30, max_attempts=3)
             assert rc == 0, "Waiting for package manager failed: %d, %r, %r" % (rc, output, errput)
 
             if not 'Could not access the Package Manager.' in output:

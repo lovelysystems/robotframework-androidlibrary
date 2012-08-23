@@ -32,13 +32,19 @@ class AndroidLibrary(object):
         self._ANDROID_HOME = ANDROID_HOME
         self._screenshot_index = 0
 
-        sdk_path = lambda suffix: os.path.abspath(os.path.join(self._ANDROID_HOME, suffix))
+        self._adb = self._sdk_path(['platform-tools/adb', 'platform-tools/adb.exe'])
+        self._emulator = self._sdk_path(['tools/emulator', 'tools/emulator.exe'])
 
-        self._adb = sdk_path('platform-tools/adb')
-        self._emulator = sdk_path('tools/emulator')
+    def _sdk_path(self, paths):
+        for path in paths:
+            complete_path = os.path.abspath(os.path.join(self._ANDROID_HOME, path))
+            if os.path.exists(complete_path):
+                return complete_path
 
-        assert os.path.exists(self._adb), "Couldn't find adb binary at %s" % self._adb
-        assert os.path.exists(self._adb), "Couldn't find emulator binary at %s" % self._emulator
+        raise AssertionError("Couldn't find %s binary in %s" % (
+          os.path.splitext(os.path.split(complete_path)[1])[0],
+          os.path.split(complete_path)[0],
+        ))
 
     def start_emulator(self, avd_name, no_window=False):
         '''

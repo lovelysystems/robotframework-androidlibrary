@@ -87,7 +87,7 @@ class AndroidLibrary(object):
             attempt = attempt + 1
             out = tempfile.NamedTemporaryFile(delete=False)
             err = tempfile.NamedTemporaryFile(delete=False)
-            p = killableprocess.Popen(' '.join(cmd), shell=True, stdout=out, stderr=err)
+            p = killableprocess.Popen(cmd, stdout=out, stderr=err)
             p.wait(max_timeout)
             out.flush()
             out.close()

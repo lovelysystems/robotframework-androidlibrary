@@ -130,7 +130,6 @@ class Popen(subprocess.Popen):
                 startupinfo.hStdError = int(errwrite)
             if shell:
                 startupinfo.dwFlags |= winprocess.STARTF_USESHOWWINDOW
-                startupinfo.wShowWindow = winprocess.SW_HIDE
                 comspec = os.environ.get("COMSPEC", "cmd.exe")
                 args = comspec + " /c " + args
 

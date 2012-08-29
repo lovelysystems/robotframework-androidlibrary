@@ -380,3 +380,44 @@ class AndroidLibrary(object):
         result = self._perform_action("touch", strategy, query)
         assert result["success"] == True, "Touching Webview element failed: '%r'" % result
 
+    def set_text(self, locator, value):
+        '''
+        Set text in a native text field.
+
+        See `Set Webview Text` to set the text in an input element in an embedded webview.
+
+        `locator` which text field to set. Valid locators are '<int>' or 'num=<int>' for a numbered text field, 'name=<'name=<string>' for a named text field
+
+        `value` the new value of the native text field
+        '''
+
+        try:
+            strategy, query = locator.split("=")
+        except ValueError, e:
+            strategy = "num"
+            query = locator
+
+            logging.debug("No explicit locator strategy set, using '%s'" % strategy)
+
+        if strategy in ("num", ):
+            try:
+                query = int(query, 10)
+            except ValueError, e:
+                raise AssertionError("Could not convert '%s' to integer, but required for '%s' locator strategy" % (
+                  query, strategy
+                ))
+
+        api_names = {
+          'num':  'enter_text_into_numbered_field',
+          'name': 'enter_text_into_named_field',
+        }
+
+        assert strategy in api_names.keys(), 'Locator strategy must be one of "%s", but was %s' % (
+          '", "'.join(api_names.keys()), strategy
+        )
+
+        result = self._perform_action(api_names[strategy], value, query)
+
+        assert result["success"] == True, "Setting the text failed: %s" % result
+
+

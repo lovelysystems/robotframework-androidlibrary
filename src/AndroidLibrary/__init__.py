@@ -315,17 +315,17 @@ class AndroidLibrary(object):
         `text` is the text the button that will be clicked contains
         '''
         result = self._perform_action("press_button_with_text", text)
-        assert result["success"] == True, "GNAH! '%s': %s" % (
+        assert result["success"] == True, "Touching button failed '%s': %s" % (
                 text, result.get('message', 'No specific error message given'))
 
     def touch_text(self, text):
         '''
-        Touch an android.widget.Button
+        Touch a text that is present on the screen
 
         `text` is the text the button that will be clicked contains
         '''
         result = self._perform_action("click_on_text", text)
-        assert result["success"] == True, "GNAH! '%s': %s" % (
+        assert result["success"] == True, "Touching text '%s' failed: %s" % (
                 text, result.get('message', 'No specific error message given'))
 
     def scroll_up(self):
@@ -333,7 +333,7 @@ class AndroidLibrary(object):
         Scroll up
         '''
         result = self._perform_action("scroll_up")
-        assert result["success"] == True, "GNAH! '%s': %s" % (
+        assert result["success"] == True, "Scrolling up failed '%s': %s" % (
                 text, result.get('message', 'No specific error message given'))
 
     def scroll_down(self):
@@ -341,7 +341,7 @@ class AndroidLibrary(object):
         Scroll down
         '''
         result = self._perform_action("scroll_down")
-        assert result["success"] == True, "GNAH! '%s': %s" % (
+        assert result["success"] == True, "Scrolling down failed '%s': %s" % (
                 text, result.get('message', 'No specific error message given'))
 
     def set_webview_text(self, locator, value):
@@ -360,7 +360,7 @@ class AndroidLibrary(object):
 
         result = self._perform_action("set_text", strategy, query, value)
 
-        assert result["success"] == True, "GNAH! '%r'" % result
+        assert result["success"] == True, "Setting webview text failed '%r'" % result
 
     def touch_webview_element(self, locator):
         '''
@@ -378,5 +378,46 @@ class AndroidLibrary(object):
         assert strategy == "css"
 
         result = self._perform_action("touch", strategy, query)
-        assert result["success"] == True, "GNAH! '%r'" % result
+        assert result["success"] == True, "Touching Webview element failed: '%r'" % result
+
+    def set_text(self, locator, value):
+        '''
+        Set text in a native text field.
+
+        See `Set Webview Text` to set the text in an input element in an embedded webview.
+
+        `locator` which text field to set. Valid locators are '<int>' or 'num=<int>' for a numbered text field, 'name=<'name=<string>' for a named text field
+
+        `value` the new value of the native text field
+        '''
+
+        try:
+            strategy, query = locator.split("=")
+        except ValueError, e:
+            strategy = "num"
+            query = locator
+
+            logging.debug("No explicit locator strategy set, using '%s'" % strategy)
+
+        if strategy in ("num", ):
+            try:
+                query = int(query, 10)
+            except ValueError, e:
+                raise AssertionError("Could not convert '%s' to integer, but required for '%s' locator strategy" % (
+                  query, strategy
+                ))
+
+        api_names = {
+          'num':  'enter_text_into_numbered_field',
+          'name': 'enter_text_into_named_field',
+        }
+
+        assert strategy in api_names.keys(), 'Locator strategy must be one of "%s", but was %s' % (
+          '", "'.join(api_names.keys()), strategy
+        )
+
+        result = self._perform_action(api_names[strategy], value, query)
+
+        assert result["success"] == True, "Setting the text failed: %s" % result
+
 

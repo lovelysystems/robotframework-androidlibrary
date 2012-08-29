@@ -26,6 +26,17 @@ Setup Test
     ...  5sec
     ...  Connect To Testserver
 
+*** Keywords ***
+
+Setup Set Text Test
+    Capture Screenshot
+    Touch Text                      Views
+    Capture Screenshot
+    Touch Text                      Controls
+    Capture Screenshot
+    Touch Text                      1. Light Theme
+    Capture Screenshot
+
 *** Test Cases ***
 
 Screen contains text
@@ -37,6 +48,18 @@ Screen does not contain text
     Capture Screenshot
 
     Screen Should Not Contain       Hoschi
+
+Set Text By Number
+    Setup Set Text Test
+    Set Text                        1                  Affe
+    Capture Screenshot
+    Screen Should Contain           Affe
+
+Set Text By Number with Explicit Locator
+    Setup Set Text Test
+    Set Text                        num=1               Katze
+    Capture Screenshot
+    Screen Should Contain           Katze
 
 Touch Text
     Capture Screenshot

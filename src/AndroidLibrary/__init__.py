@@ -420,6 +420,16 @@ class AndroidLibrary(object):
 
         assert result["success"] == True, "Setting the text failed: %s" % result
 
+    def webview_should_contain(self, text):
+        '''
+        assert that the webview contains a given text
+
+        `text` the text the webview should contain
+        '''
+        r = self._perform_action("query","css","html")
+        c = json.loads(r["message"])
+        assert text in c[0]["textContent"], "Webview does not contain: %s" % text
+
     def swipe_left(self):
         '''
         Performs a swipe gesture to the left

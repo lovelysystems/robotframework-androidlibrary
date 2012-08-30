@@ -420,4 +420,18 @@ class AndroidLibrary(object):
 
         assert result["success"] == True, "Setting the text failed: %s" % result
 
+    def swipe_left(self):
+        '''
+        Performs a swipe gesture to the left
+        '''
+        result = self._perform_action('swipe', 'left')
+
+        assert result["success"] == True, "Swiping left failed: %s" % result
+
+    def swipe_right(self):
+        '''
+        Performs a swipe gesture to the right
+        '''
+        result = self._perform_action('swipe', 'right')
+        assert result["success"] == True, "Swiping right failed: %s" % result
 

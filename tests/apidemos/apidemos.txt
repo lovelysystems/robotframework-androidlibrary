@@ -91,3 +91,8 @@ Scroll a bit
     Scroll Up
     Capture Screenshot
 
+    Swipe Left
+    Capture Screenshot
+
+    Swipe Right
+    Capture Screenshot

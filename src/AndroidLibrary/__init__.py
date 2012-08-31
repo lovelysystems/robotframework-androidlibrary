@@ -165,7 +165,7 @@ class AndroidLibrary(object):
 
         `key_code` The key code to send
         '''
-        rc, output, errput = self._execute_with_timeout([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code])
+        rc, output, errput = self._execute_with_timeout([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code], max_attempts=1)
         assert rc == 0
 
     def press_menu_button(self):

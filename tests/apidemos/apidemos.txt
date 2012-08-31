@@ -96,3 +96,21 @@ Scroll a bit
 
     Swipe Right
     Capture Screenshot
+
+
+Touch some imagebuttons
+    Capture Screenshot
+
+    Touch Text                      Views
+
+    Capture Screenshot
+
+    Touch Text                      ImageButton
+
+    Capture Screenshot
+
+    Touch Image Button        1
+
+    Capture Screenshot
+
+    Touch Image Button        num=2

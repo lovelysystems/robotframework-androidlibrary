@@ -446,6 +446,11 @@ class AndroidLibrary(object):
         assert result["success"] == True, "Swiping right failed: %s" % result
 
     def touch_image_button(self, locator):
+        '''
+        Touch an android.widget.ImageButton
+
+        `locator` which image button will be touched. Valid locators are '<int>' or 'num=<int>' for a numbered ImageButton.
+        '''
 
         try:
             strategy, query = locator.split("=")

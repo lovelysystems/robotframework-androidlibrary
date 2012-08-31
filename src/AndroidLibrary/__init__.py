@@ -445,3 +445,23 @@ class AndroidLibrary(object):
         result = self._perform_action('swipe', 'right')
         assert result["success"] == True, "Swiping right failed: %s" % result
 
+    def touch_image_button(self, locator):
+
+        try:
+            strategy, query = locator.split("=")
+        except ValueError, e:
+            strategy = "num"
+            query = locator
+
+            logging.debug("No explicit locator strategy set, using '%s'" % strategy)
+
+        if strategy is "num":
+            try:
+                query = int(query, 10)
+            except ValueError, e:
+                raise AssertionError("Could not convert '%s' to integer, but required for '%s' locator strategy" % (
+                  query, strategy
+                ))
+
+        result = self._perform_action('press_image_button_number', query)
+        assert result["success"] == True, "Touching image button failed: %s" % result

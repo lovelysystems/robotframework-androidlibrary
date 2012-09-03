@@ -146,7 +146,7 @@ class AndroidLibrary(object):
 
         self._wait_for_package_manager()
 
-        rc, output, errput = self._execute_with_timeout([self._adb, "install", "-r", apk_file])
+        rc, output, errput = self._execute_with_timeout([self._adb, "install", "-r", apk_file],max_timeout=240)
         logging.debug(output)
         assert rc == 0, "Installing application failed: %d, %r" % (rc, output)
         assert output != None

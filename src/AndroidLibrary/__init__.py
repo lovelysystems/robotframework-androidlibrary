@@ -174,7 +174,7 @@ class AndroidLibrary(object):
         '''
         self.send_key(82)
 
-    def set_device_endpoint(self, host='localhost', port='34777'):
+    def set_device_endpoint(self, host='localhost', port=34777):
         """
         Set the device endpoint where the application is started.
         If not set the endpoint defaults to 'localhost:34777'.
@@ -183,8 +183,8 @@ class AndroidLibrary(object):
         `port` the endpoint's port
         """
         self._host = host
-        self._port = port
-        self._url = 'http://%s:%d' % (host, port)
+        self._port = int(port)
+        self._url = 'http://%s:%d' % (host, self._port)
 
     def start_testserver(self, package_name):
         '''

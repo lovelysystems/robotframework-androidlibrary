@@ -34,6 +34,7 @@ class AndroidLibrary(object):
 
         self._adb = self._sdk_path(['platform-tools/adb', 'platform-tools/adb.exe'])
         self._emulator = self._sdk_path(['tools/emulator', 'tools/emulator.exe'])
+        self._url = None
 
     def _sdk_path(self, paths):
         for path in paths:

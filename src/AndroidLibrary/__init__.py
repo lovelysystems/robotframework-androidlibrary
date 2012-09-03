@@ -174,6 +174,9 @@ class AndroidLibrary(object):
         '''
         self.send_key(82)
 
+    def set_device_endpoint(self, host, port):
+        self._url = 'http://%s:%d' % (host, port)
+
     def start_testserver(self, package_name):
         '''
         Start the remote test server inside the Android Application.
@@ -202,9 +205,8 @@ class AndroidLibrary(object):
           "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % package_name,
         ]
 
-        self._host = 'localhost'
-        self._port = 34777
-        self._url = 'http://%s:%d' % (self._host, self._port)
+        if not self._url:
+            self.set_device_endpoint('localhost', 34777)
 
         logging.debug("$> %s", ' '.join(args))
         self._testserver_proc = subprocess.Popen(args)

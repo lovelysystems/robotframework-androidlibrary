@@ -174,7 +174,16 @@ class AndroidLibrary(object):
         '''
         self.send_key(82)
 
-    def set_device_endpoint(self, host, port):
+    def set_device_endpoint(self, host='localhost', port='34777'):
+        """
+        Set the device endpoint where the application is started.
+        If not set the endpoint defaults to 'localhost:34777'.
+
+        `host` the endpoint's host
+        `port` the endpoint's port
+        """
+        self._host = host
+        self._port = port
         self._url = 'http://%s:%d' % (host, port)
 
     def start_testserver(self, package_name):
@@ -184,11 +193,14 @@ class AndroidLibrary(object):
         `package_name` fully qualified name of the application to test
 
         '''
+        if not self._url:
+            self.set_device_endpoint()
+
         rc, output, errput = self._execute_with_timeout([
           self._adb,
           "wait-for-device",
           "forward",
-          "tcp:%d" % 34777,
+          "tcp:%d" % self._port,
           "tcp:7102"
         ])
 
@@ -204,9 +216,6 @@ class AndroidLibrary(object):
           "sh.calaba.instrumentationbackend.InstrumentationBackend",
           "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % package_name,
         ]
-
-        if not self._url:
-            self.set_device_endpoint('localhost', 34777)
 
         logging.debug("$> %s", ' '.join(args))
         self._testserver_proc = subprocess.Popen(args)

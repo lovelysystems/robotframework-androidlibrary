@@ -178,6 +178,7 @@ class AndroidLibrary(object):
         self.send_key(82)
 
     def set_device_endpoint(self, host='localhost', port=34777):
+        port = int(port)
         """
         (deprecated) Use 'Set Device Url' instead.
 

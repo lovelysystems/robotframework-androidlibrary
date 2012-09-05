@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 import requests
+from urlparse import urlparse, urljoin
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 execfile(os.path.join(THIS_DIR, 'version.py'))
@@ -35,6 +36,7 @@ class AndroidLibrary(object):
         self._adb = self._sdk_path(['platform-tools/adb', 'platform-tools/adb.exe'])
         self._emulator = self._sdk_path(['tools/emulator', 'tools/emulator.exe'])
         self._url = None
+        self._testserver_proc = None
 
     def _sdk_path(self, paths):
         for path in paths:
@@ -177,15 +179,29 @@ class AndroidLibrary(object):
 
     def set_device_endpoint(self, host='localhost', port=34777):
         """
+        (deprecated) Use 'Set Device Url' instead.
+
         Set the device endpoint where the application is started.
         If not set the endpoint defaults to 'localhost:34777'.
 
         `host` the endpoint's host
         `port` the endpoint's port
         """
-        self._host = host
-        self._port = int(port)
-        self._url = 'http://%s:%d' % (host, self._port)
+        self.set_device_url('http://%s:%d' % (host, port))
+
+    def set_device_url(self, url='http://localhost:34777/'):
+        """
+        Set the device url where the application is started.
+
+        `url` the base url to use for all requests
+        """
+
+        parsed_url = urlparse(url)
+
+        self._port = parsed_url.port
+        self._hostname = parsed_url.hostname
+
+        self._url = url
 
     def start_testserver(self, package_name):
         '''
@@ -195,7 +211,12 @@ class AndroidLibrary(object):
 
         '''
         if not self._url:
-            self.set_device_endpoint()
+            self.set_device_url()
+
+        assert self._hostname == 'localhost', (
+          "Device Url was set to %s, but should be set to localhost with the "
+          "'Set Device Url' keyword to use a local testserver"
+        )
 
         rc, output, errput = self._execute_with_timeout([
           self._adb,
@@ -225,10 +246,13 @@ class AndroidLibrary(object):
         '''
         Halts a previously started Android Emulator.
         '''
-        response = requests.get(self._url + '/kill')
+
+        assert self._testserver_proc != None, 'Tried to stop a previously started test server, but it was not started.'
+
+        response = requests.get(urljoin(self._url, 'kill'))
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
-        assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'pong'" % response.text
+        assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'Affirmative'" % response.text
 
     def connect_to_testserver(self):
         '''
@@ -236,7 +260,7 @@ class AndroidLibrary(object):
         Application. Performs a handshake.
         '''
 
-        response = requests.get(self._url + '/ping')
+        response = requests.get(urljoin(self._url, 'ping'))
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
         assert response.text == 'pong', "InstrumentationBackend replied '%s', expected 'pong'" % response.text
@@ -289,7 +313,7 @@ class AndroidLibrary(object):
         '''
 
         path, link = self._get_screenshot_paths(filename)
-        response = requests.get(self._url + '/screenshot')
+        response = requests.get(urljoin(self._url, 'screenshot'))
 
         with open(path, 'w') as f:
             f.write(response.content)

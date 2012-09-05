@@ -171,9 +171,9 @@ class AndroidLibrary(object):
 
     def press_menu_button(self):
         '''
-        Press the menu button ("KEYCODE_MENU"), same as '| Send Key | 82 |'
+        Press the menu button ("KEYCODE_MENU")
         '''
-        self.send_key(82)
+        self._perform_action("press_menu")
 
     def set_device_endpoint(self, host='localhost', port=34777):
         """

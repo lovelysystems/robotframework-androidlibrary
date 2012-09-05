@@ -228,7 +228,7 @@ class AndroidLibrary(object):
         response = requests.get(self._url + '/kill')
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
-        assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'pong'" % response.text
+        assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'Affirmative'" % response.text
 
     def connect_to_testserver(self):
         '''

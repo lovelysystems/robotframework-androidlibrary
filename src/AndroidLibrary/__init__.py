@@ -35,6 +35,7 @@ class AndroidLibrary(object):
         self._adb = self._sdk_path(['platform-tools/adb', 'platform-tools/adb.exe'])
         self._emulator = self._sdk_path(['tools/emulator', 'tools/emulator.exe'])
         self._url = None
+        self._testserver_proc = None
 
     def _sdk_path(self, paths):
         for path in paths:
@@ -226,6 +227,8 @@ class AndroidLibrary(object):
         Halts a previously started Android Emulator.
         '''
         response = requests.get(self._url + '/kill')
+
+        assert self._testserver_proc != None, 'Tried to stop a previously started test server, but it was not started.'
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
         assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'Affirmative'" % response.text

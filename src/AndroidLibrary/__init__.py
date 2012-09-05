@@ -178,7 +178,6 @@ class AndroidLibrary(object):
         self.send_key(82)
 
     def set_device_endpoint(self, host='localhost', port=34777):
-        port = int(port)
         """
         (deprecated) Use 'Set Device Url' instead.
 
@@ -188,7 +187,7 @@ class AndroidLibrary(object):
         `host` the endpoint's host
         `port` the endpoint's port
         """
-        self.set_device_url('http://%s:%d' % (host, port))
+        self.set_device_url('http://%s:%d' % (host, int(port)))
 
     def set_device_url(self, url='http://localhost:34777/'):
         """
@@ -275,8 +274,8 @@ class AndroidLibrary(object):
         logging.debug(">> %r", action)
 
         response = requests.post(self._url,
-          data = { 'command': action },
-          headers = { 'Content-Type': 'application/x-www-form-urlencoded' },
+          data = action,
+          headers = { 'Content-Type': 'application/json'},
         )
 
         logging.debug("<< %r", response.text)

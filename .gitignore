@@ -12,3 +12,8 @@ output.xml
 report.html
 ApiDemos.apk
 test_servers/
+*.pyc
+.irb-history
+.irbrc
+irb_ios5.sh
+screenshot_irb.png

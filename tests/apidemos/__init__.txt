@@ -35,6 +35,7 @@ Android SDK Should Exist
 
 Update Android SDK
     Execute                       %{ANDROID_HOME}/tools/android update sdk -t android-${API_LEVEL} --no-ui
+    Execute                       %{ANDROID_HOME}/tools/android update sdk -t addon-google_apis-google-${API_LEVEL} --no-ui
 
 Create Android Virtual Device
     Execute                       echo "no" | %{ANDROID_HOME}/tools/android --silent create avd --name ${EMULATOR_NAME} --force -t android-${API_LEVEL}

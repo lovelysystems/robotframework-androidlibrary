@@ -274,8 +274,10 @@ class AndroidLibrary(object):
         logging.debug(">> %r", action)
 
         response = requests.post(self._url,
-          data = { 'command': action },
-          headers = { 'Content-Type': 'application/x-www-form-urlencoded' },
+          data=action,
+          headers={
+            'Content-Type': 'application/json'
+          },
         )
 
         logging.debug("<< %r", response.text)

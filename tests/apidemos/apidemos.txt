@@ -8,7 +8,7 @@ Suite Setup       Setup Suite
 Test Setup        Setup Test
 Test Teardown     Stop Testserver
 
-Test Timeout      2 minutes
+Test Timeout      10 minutes
 
 *** Keywords ***
 

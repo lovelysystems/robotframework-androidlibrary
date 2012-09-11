@@ -40,7 +40,7 @@ Create Android Virtual Device
     Execute                       echo "no" | %{ANDROID_HOME}/tools/android --silent create avd --name ${EMULATOR_NAME} --force -t android-${API_LEVEL}
 
 Pull ApiDemos.apk from Device
-    [Timeout]                     3 minutes
+    [Timeout]                     5 minutes
 
     Wait For Device
 
@@ -62,7 +62,7 @@ Build Instrumentation App
     Set Global Variable           ${TEST_APK}       ${TEST_SERVERS[0]}
 
 Install App
-    [Timeout]                     3 minutes
+    [Timeout]                     5 minutes
 
     Wait for Device
 

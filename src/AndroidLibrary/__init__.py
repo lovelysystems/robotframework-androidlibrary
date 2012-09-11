@@ -487,7 +487,7 @@ class AndroidLibrary(object):
         '''
         Touch an android.widget.ImageButton
 
-        `locator` which image button will be touched. Valid locators are '<int>' or 'num=<int>' for a numbered ImageButton.
+        `locator` which image button will be touched. Valid locators are '<int>' or 'num=<int>' for a numbered ImageButton or 'desc=<string>' for an imageButton with a contentDescription set.
         '''
 
         try:
@@ -498,13 +498,16 @@ class AndroidLibrary(object):
 
             logging.debug("No explicit locator strategy set, using '%s'" % strategy)
 
-        if strategy is "num":
+        action = "press_image_button_number"
+        if strategy == "num":
             try:
                 query = int(query, 10)
             except ValueError, e:
                 raise AssertionError("Could not convert '%s' to integer, but required for '%s' locator strategy" % (
                   query, strategy
                 ))
+        elif strategy == "desc":
+            action = "press_image_button_description"
 
-        result = self._perform_action('press_image_button_number', query)
+        result = self._perform_action(action, query)
         assert result["success"] == True, "Touching image button failed: %s" % result

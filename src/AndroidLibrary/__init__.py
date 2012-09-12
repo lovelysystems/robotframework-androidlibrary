@@ -418,6 +418,21 @@ class AndroidLibrary(object):
         result = self._perform_action("touch", strategy, query)
         assert result["success"] == True, "Touching Webview element failed: '%r'" % result
 
+    def webview_scroll_to(self, locator):
+        '''
+        Scroll to a specific elment in a webview
+        `locator` locator for element to scroll to (only css locators are supported at the moment)
+        '''
+        try:
+            strategy, query = locator.split("=")
+        except ValueError, e:
+            strategy = "css"
+            query = locator
+
+        assert strategy == "css"
+        result = self._perform_action("scroll_to", strategy, query)
+        assert result["success"] == True, "Scrolling to Webview element failed: '%r'" % result
+
     def set_text(self, locator, value):
         '''
         Set text in a native text field.

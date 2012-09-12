@@ -34,3 +34,8 @@ License
 robotframework is a port of the ruby-based `calabash-android` and therefore
 licensed under the  `Eclipse Public License (EPL) v1.0
 <http://www.eclipse.org/legal/epl-v10.html>`_
+
+Documentation
++++++++++++++
+
+The keyword documentation could be found at <http://lovelysystems.github.com/robotframework-androidlibrary/>

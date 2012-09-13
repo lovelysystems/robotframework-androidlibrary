@@ -21,9 +21,9 @@ To install, just fetch the latest version from PyPI::
 Prepare your App
 ++++++++++++++++
 
-robotframework-androidlibrary uses calabash-android underneath. To install calabash-android (we've only tested this with v0.2.19 yet), use the following command::
+robotframework-androidlibrary uses calabash-android underneath. To install calabash-android (we've only tested this with v0.2.20 yet), use the following command::
 
-    gem install --version '= 0.2.19' calabash-android
+    gem install --version '= 0.2.20' calabash-android
 
 To prepare your android app look at  <https://github.com/calabash/calabash-android#installation>
 

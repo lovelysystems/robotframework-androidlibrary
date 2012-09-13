@@ -498,6 +498,15 @@ class AndroidLibrary(object):
         result = self._perform_action('swipe', 'right')
         assert result["success"] == True, "Swiping right failed: %s" % result
 
+    def touch_view_description(self, description):
+        '''
+        Touch a view identified by contentDescription
+
+        `description` the content description of the view
+        '''
+        result = self._perform_action('click_on_view_by_description',description)
+        assert result["success"] == True, "Click on view failed: %s" % result
+
     def touch_image_button(self, locator):
         '''
         Touch an android.widget.ImageButton

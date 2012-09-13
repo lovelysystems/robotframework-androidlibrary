@@ -11,9 +11,9 @@ Prerequisites
 =============
 
 - Install the `Android SDK <http://developer.android.com/sdk/index.html>`_
-- Install calabash-android v0.2.19::
+- Install calabash-android v0.2.20::
 
-    gem install --version '= 0.2.19' calabash-android
+    gem install --version '= 0.2.20' calabash-android
 
 - Create a debug keystore::
 

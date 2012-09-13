@@ -382,6 +382,15 @@ class AndroidLibrary(object):
         assert result["success"] == True, "Scrolling down failed '%s': %s" % (
                 text, result.get('message', 'No specific error message given'))
 
+    def _split_locator(self, locator, default_strategy="css"):
+        try:
+            strategy, query = locator.split("=")
+        except ValueError, e:
+            strategy = default_strategy
+            query = locator
+            logging.debug("No explicit locator strategy set, using '%s'" % strategy)
+        return strategy, query
+
     def set_webview_text(self, locator, value):
         '''
         Set the <input> field in the webview to the given value
@@ -389,13 +398,7 @@ class AndroidLibrary(object):
         `locator` the locator to find the element to change. Valid locators are in the form of css=#element_id or xpath=//input[0]
         `value` the new value
         '''
-
-        try:
-            strategy, query = locator.split("=")
-        except ValueError, e:
-            strategy = "css"
-            query = locator
-
+        strategy, query = self._split_locator(locator)
         result = self._perform_action("set_text", strategy, query, value)
 
         assert result["success"] == True, "Setting webview text failed '%r'" % result
@@ -406,15 +409,7 @@ class AndroidLibrary(object):
 
         `locator` locator for element to trigger a click event (only css locators are supported at the moment)
         '''
-
-        try:
-            strategy, query = locator.split("=")
-        except ValueError, e:
-            strategy = "css"
-            query = locator
-
-        assert strategy == "css"
-
+        strategy, query = self._split_locator(locator)
         result = self._perform_action("touch", strategy, query)
         assert result["success"] == True, "Touching Webview element failed: '%r'" % result
 
@@ -423,13 +418,7 @@ class AndroidLibrary(object):
         Scroll to a specific elment in a webview
         `locator` locator for element to scroll to (only css locators are supported at the moment)
         '''
-        try:
-            strategy, query = locator.split("=")
-        except ValueError, e:
-            strategy = "css"
-            query = locator
-
-        assert strategy == "css"
+        strategy, query = self._split_locator(locator)
         result = self._perform_action("scroll_to", strategy, query)
         assert result["success"] == True, "Scrolling to Webview element failed: '%r'" % result
 
@@ -443,15 +432,7 @@ class AndroidLibrary(object):
 
         `value` the new value of the native text field
         '''
-
-        try:
-            strategy, query = locator.split("=")
-        except ValueError, e:
-            strategy = "num"
-            query = locator
-
-            logging.debug("No explicit locator strategy set, using '%s'" % strategy)
-
+        strategy, query = self._split_locator(locator, "num")
         if strategy in ("num", ):
             try:
                 query = int(query, 10)
@@ -498,6 +479,16 @@ class AndroidLibrary(object):
         result = self._perform_action('swipe', 'right')
         assert result["success"] == True, "Swiping right failed: %s" % result
 
+    def touch_view(self, locator):
+        '''
+        Touch a view
+
+        `locator` which view will be touched. Valid locators are '<string>' or'desc=<string>' for an imageButton with a contentDescription set.
+        '''
+        strategy, query = self._split_locator(locator, "desc")
+        result = self._perform_action('click_on_view_by_description', query)
+        assert result["success"] == True, "Click on view failed: %s" % result
+
     def touch_image_button(self, locator):
         '''
         Touch an android.widget.ImageButton
@@ -505,14 +496,7 @@ class AndroidLibrary(object):
         `locator` which image button will be touched. Valid locators are '<int>' or 'num=<int>' for a numbered ImageButton or 'desc=<string>' for an imageButton with a contentDescription set.
         '''
 
-        try:
-            strategy, query = locator.split("=")
-        except ValueError, e:
-            strategy = "num"
-            query = locator
-
-            logging.debug("No explicit locator strategy set, using '%s'" % strategy)
-
+        strategy, query = self._split_locator(locator, "num")
         action = "press_image_button_number"
         if strategy == "num":
             try:

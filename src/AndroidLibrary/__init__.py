@@ -37,6 +37,8 @@ class AndroidLibrary(object):
         self._emulator = self._sdk_path(['tools/emulator', 'tools/emulator.exe'])
         self._url = None
         self._testserver_proc = None
+        self._username = None
+        self._password = None
 
     def _sdk_path(self, paths):
         for path in paths:
@@ -48,6 +50,28 @@ class AndroidLibrary(object):
           os.path.splitext(os.path.split(complete_path)[1])[0],
           os.path.split(complete_path)[0],
         ))
+
+    def _request(self, method, url, *args, **kwargs):
+
+        if self._username != None and self._password != None:
+            kwargs['auth'] = (self._username, self._password)
+
+        logging.debug(">> %r %r", args, kwargs)
+        response = getattr(requests, method)(url, *args, **kwargs)
+        logging.debug("<< %r %r", response.status_code, response.text)
+
+        return response
+
+    def set_basic_auth(self, username, password):
+        '''
+        Set basic authentication to use with all further API calls
+
+        username is the username to authenticate with, e.g. 'Aladdin'
+
+        password is the password to use, e.g. 'open sesame'
+        '''
+        self._username = username
+        self._password = password
 
     def start_emulator(self, avd_name, no_window=False):
         '''
@@ -249,7 +273,7 @@ class AndroidLibrary(object):
 
         assert self._testserver_proc != None, 'Tried to stop a previously started test server, but it was not started.'
 
-        response = requests.get(urljoin(self._url, 'kill'))
+        response = self._request("get",urljoin(self._url, 'kill'))
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
         assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'Affirmative'" % response.text
@@ -260,7 +284,7 @@ class AndroidLibrary(object):
         Application. Performs a handshake.
         '''
 
-        response = requests.get(urljoin(self._url, 'ping'))
+        response = self._request("get",urljoin(self._url, 'ping'))
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
         assert response.text == 'pong', "InstrumentationBackend replied '%s', expected 'pong'" % response.text
@@ -272,15 +296,16 @@ class AndroidLibrary(object):
         })
 
         logging.debug(">> %r", action)
-
-        response = requests.post(self._url,
+        url = self._url
+        response = self._request("post",url,
           data=action,
           headers={
             'Content-Type': 'application/json'
           },
         )
 
-        logging.debug("<< %r", response.text)
+        logging.error("<< %r", url)
+        logging.error("<< %r", response.text)
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
         return response.json
 
@@ -315,7 +340,7 @@ class AndroidLibrary(object):
         '''
 
         path, link = self._get_screenshot_paths(filename)
-        response = requests.get(urljoin(self._url, 'screenshot'))
+        response = self._request("get",urljoin(self._url, 'screenshot'))
 
         with open(path, 'w') as f:
             f.write(response.content)
@@ -372,7 +397,7 @@ class AndroidLibrary(object):
         '''
         result = self._perform_action("scroll_up")
         assert result["success"] == True, "Scrolling up failed '%s': %s" % (
-                text, result.get('message', 'No specific error message given'))
+                result.text, result.get('message', 'No specific error message given'))
 
     def scroll_down(self):
         '''
@@ -380,7 +405,7 @@ class AndroidLibrary(object):
         '''
         result = self._perform_action("scroll_down")
         assert result["success"] == True, "Scrolling down failed '%s': %s" % (
-                text, result.get('message', 'No specific error message given'))
+                result.text, result.get('message', 'No specific error message given'))
 
     def _split_locator(self, locator, default_strategy="css"):
         try:

@@ -58,7 +58,6 @@ class AndroidLibrary(object):
 
         logging.debug(">> %r %r", args, kwargs)
         response = getattr(requests, method)(url, *args, **kwargs)
-        logging.debug("<< %r %r", response.status_code, response.text)
 
         return response
 

@@ -72,14 +72,16 @@ class AndroidLibrary(object):
         self._username = username
         self._password = password
 
-    def start_emulator(self, avd_name, no_window=False):
+    def start_emulator(self, avd_name, no_window=False, language="en", country="us"):
         '''
         Starts the Android Emulator.
 
         `avd_name` Identifier of the Android Virtual Device, for valid values on your machine run "$ANDROID_HOME/tools/android list avd|grep Name`
         `no_window` Set to True to start the emulator without GUI, useful for headless environments.
         '''
-        args = [self._emulator, '-avd', avd_name]
+        lang = "persist.sys.language=%s" % language
+        co = "persist.sys.country=%s" % country
+        args = [self._emulator, '-avd', avd_name, '-prop', lang, '-prop', co]
 
         if no_window:
             args.append('-no-window')

@@ -4,6 +4,7 @@ import os
 import subprocess
 import requests
 from urlparse import urlparse, urljoin
+from xml.dom import minidom
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 execfile(os.path.join(THIS_DIR, 'version.py'))
@@ -230,6 +231,9 @@ class AndroidLibrary(object):
 
     def start_testserver(self, package_name):
         '''
+        (deprecated) Use 'Start TestServer with apk' instead. 
+        Does not work with calabash-android >= 3.0
+
         Start the remote test server inside the Android Application.
 
         `package_name` fully qualified name of the application to test
@@ -266,6 +270,64 @@ class AndroidLibrary(object):
 
         logging.debug("$> %s", ' '.join(args))
         self._testserver_proc = subprocess.Popen(args)
+
+    def start_testserver_with_apk(self, apk):
+        '''
+        Works only with calabash-android >= 3.0
+        Start the remote test server
+
+        `apk` path to the apk to controll
+        '''
+        if not self._url:
+            self.set_device_url()
+
+        assert self._hostname == 'localhost', (
+          "Device Url was set to %s, but should be set to localhost with the "
+          "'Set Device Url' keyword to use a local testserver"
+        )
+
+        rc, output, errput = self._execute_with_timeout([
+          self._adb,
+          "wait-for-device",
+          "forward",
+          "tcp:%d" % self._port,
+          "tcp:7102"
+        ])
+
+        package_name, main_activity = self._main_activity(apk)
+        args = [
+            self._adb,
+            "shell",
+            "am",
+            "instrument",
+            "-w",
+            "-e",
+            "target_package",
+            package_name,
+            "-e",
+            "main_activity",
+            "%s%s" % (package_name, main_activity),
+            "-e",
+            "class",
+            "sh.calaba.instrumentationbackend.InstrumentationBackend",
+            "sh.calaba.android.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner",
+        ]
+        self._testserver_proc = subprocess.Popen(args)
+
+    def _main_activity(self, apk):
+        '''
+        Returns the package_name and the Main-Action
+        from a given apk
+        '''
+        rc, output, errput = self._execute_with_timeout(["calabash-android", "extract-manifest", apk])
+        xmldoc = minidom.parseString(output)
+        manifest = xmldoc.getElementsByTagName("manifest")[0]
+        package = manifest.getAttribute("package")
+        assert package is not None, "Could not find package name in apk: %s manifest: %s" % (apk, output)
+        for node in xmldoc.getElementsByTagName("action"):
+            if node.getAttribute("android:name") == "android.intent.action.MAIN":
+                return package, node.parentNode.parentNode.getAttribute("android:name")
+        return package, None
 
     def stop_testserver(self):
         '''

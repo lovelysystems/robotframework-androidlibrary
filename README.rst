@@ -5,10 +5,10 @@ robotframework-androidlibrary
 <http://code.google.com/p/robotframework/>`_ test library for all your Android
 automation needs.
 
-It uses `Calabash's Android test server
-<https://github.com/calabash/calabash-ios-server>`_ to communicate with your
-instrumented Android application similar to how `Selenium WebDriver
-<http://seleniumhq.org/projects/webdriver/>`_ talks to your web browser.
+It uses `Calabash's Android <https://github.com/calabash/calabash->`_ to
+communicate with your instrumented Android application similar to how `Selenium
+WebDriver <http://seleniumhq.org/projects/webdriver/>`_ talks to your web
+browser.
 
 
 Installation

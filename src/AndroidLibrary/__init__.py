@@ -5,9 +5,7 @@ import subprocess
 import requests
 from urlparse import urlparse, urljoin
 from xml.dom import minidom
-
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-execfile(os.path.join(THIS_DIR, 'version.py'))
+from version import VERSION
 
 __version__ = VERSION
 
@@ -18,6 +16,7 @@ from robot.api import logger
 import killableprocess
 import tempfile
 
+
 class AndroidLibrary(object):
 
     ROBOT_LIBRARY_VERSION = VERSION
@@ -25,7 +24,8 @@ class AndroidLibrary(object):
 
     def __init__(self, ANDROID_HOME=None):
         '''
-        Path to the Android SDK. Optional if the $ANDROID_HOME environment variable is set.
+        Path to the Android SDK.
+        Optional if the $ANDROID_HOME environment variable is set.
         '''
 
         if ANDROID_HOME is None:
@@ -34,8 +34,10 @@ class AndroidLibrary(object):
         self._ANDROID_HOME = ANDROID_HOME
         self._screenshot_index = 0
 
-        self._adb = self._sdk_path(['platform-tools/adb', 'platform-tools/adb.exe'])
-        self._emulator = self._sdk_path(['tools/emulator', 'tools/emulator.exe'])
+        self._adb = self._sdk_path(['platform-tools/adb',
+                                    'platform-tools/adb.exe'])
+        self._emulator = self._sdk_path(['tools/emulator',
+                                         'tools/emulator.exe'])
         self._url = None
         self._testserver_proc = None
         self._username = None
@@ -43,18 +45,18 @@ class AndroidLibrary(object):
 
     def _sdk_path(self, paths):
         for path in paths:
-            complete_path = os.path.abspath(os.path.join(self._ANDROID_HOME, path))
+            complete_path = os.path.abspath(os.path.join(
+                                            self._ANDROID_HOME, path))
             if os.path.exists(complete_path):
                 return complete_path
 
         raise AssertionError("Couldn't find %s binary in %s" % (
-          os.path.splitext(os.path.split(complete_path)[1])[0],
-          os.path.split(complete_path)[0],
-        ))
+            os.path.splitext(os.path.split(complete_path)[1])[0],
+            os.path.split(complete_path)[0],))
 
     def _request(self, method, url, *args, **kwargs):
 
-        if self._username != None and self._password != None:
+        if self._username is not None and self._password is not None:
             kwargs['auth'] = (self._username, self._password)
 
         logging.debug(">> %r %r", args, kwargs)
@@ -73,7 +75,8 @@ class AndroidLibrary(object):
         self._username = username
         self._password = password
 
-    def start_emulator(self, avd_name, no_window=False, language="en", country="us"):
+    def start_emulator(self, avd_name, no_window=False,
+                       language="en", country="us"):
         '''
         Starts the Android Emulator.
 
@@ -105,7 +108,6 @@ class AndroidLibrary(object):
         self._emulator_proc.wait()
 
         self._emulator_proc = None
-
 
     def _execute_with_timeout(self, cmd, max_attempts=3, max_timeout=120):
         logging.debug("$> %s # with timeout %ds", ' '.join(cmd), max_timeout)
@@ -145,8 +147,8 @@ class AndroidLibrary(object):
 
         while attempts < max_attempts:
             rc, output, errput = self._execute_with_timeout([
-                self._adb, "wait-for-device", "shell", "pm", "path", "android"
-              ], max_timeout=60, max_attempts=3)
+                self._adb, "wait-for-device", "shell", "pm", "path", "android"],
+                max_timeout=60, max_attempts=3)
             assert rc == 0, "Waiting for package manager failed: %d, %r, %r" % (rc, output, errput)
 
             if not 'Could not access the Package Manager.' in output:
@@ -159,7 +161,7 @@ class AndroidLibrary(object):
 
         rc, output, errput = self._execute_with_timeout([self._adb, "uninstall", package_name])
         assert rc == 0, "Uninstalling application failed: %d, %r" % (rc, output)
-        assert output != None
+        assert output is not None
         logging.debug(output)
         assert 'Error' not in output, output
 
@@ -175,17 +177,17 @@ class AndroidLibrary(object):
 
         self._wait_for_package_manager()
 
-        rc, output, errput = self._execute_with_timeout([self._adb, "install", "-r", apk_file],max_timeout=240)
+        rc, output, errput = self._execute_with_timeout([self._adb, "install", "-r", apk_file], max_timeout=240)
         logging.debug(output)
         assert rc == 0, "Installing application failed: %d, %r" % (rc, output)
-        assert output != None
+        assert output is not None
         assert 'Error' not in output, output
 
     def wait_for_device(self, timeout=120):
         '''
         Wait for the device to become available
         '''
-        rc, output, errput = self._execute_with_timeout([self._adb, 'wait-for-device'], max_timeout=timeout/3, max_attempts=3)
+        rc, output, errput = self._execute_with_timeout([self._adb, 'wait-for-device'], max_timeout=timeout / 3, max_attempts=3)
         assert rc == 0, "wait for device application failed: %d, %r" % (rc, output)
 
     def send_key(self, key_code):
@@ -231,7 +233,7 @@ class AndroidLibrary(object):
 
     def start_testserver(self, package_name):
         '''
-        (deprecated) Use 'Start TestServer with apk' instead. 
+        (deprecated) Use 'Start TestServer with apk' instead.
         Does not work with calabash-android >= 3.0
 
         Start the remote test server inside the Android Application.
@@ -243,29 +245,29 @@ class AndroidLibrary(object):
             self.set_device_url()
 
         assert self._hostname == 'localhost', (
-          "Device Url was set to %s, but should be set to localhost with the "
-          "'Set Device Url' keyword to use a local testserver"
+            "Device Url was set to %s, but should be set to localhost with the "
+            "'Set Device Url' keyword to use a local testserver"
         )
 
         rc, output, errput = self._execute_with_timeout([
-          self._adb,
-          "wait-for-device",
-          "forward",
-          "tcp:%d" % self._port,
-          "tcp:7102"
+            self._adb,
+            "wait-for-device",
+            "forward",
+            "tcp:%d" % self._port,
+            "tcp:7102"
         ])
 
         args = [
-          self._adb,
-          "wait-for-device",
-          "shell",
-          "am",
-          "instrument",
-          "-w",
-          "-e",
-          "class",
-          "sh.calaba.instrumentationbackend.InstrumentationBackend",
-          "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % package_name,
+            self._adb,
+            "wait-for-device",
+            "shell",
+            "am",
+            "instrument",
+            "-w",
+            "-e",
+            "class",
+            "sh.calaba.instrumentationbackend.InstrumentationBackend",
+            "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % package_name,
         ]
 
         logging.debug("$> %s", ' '.join(args))
@@ -282,16 +284,16 @@ class AndroidLibrary(object):
             self.set_device_url()
 
         assert self._hostname == 'localhost', (
-          "Device Url was set to %s, but should be set to localhost with the "
-          "'Set Device Url' keyword to use a local testserver"
+            "Device Url was set to %s, but should be set to localhost with the "
+            "'Set Device Url' keyword to use a local testserver"
         )
 
         rc, output, errput = self._execute_with_timeout([
-          self._adb,
-          "wait-for-device",
-          "forward",
-          "tcp:%d" % self._port,
-          "tcp:7102"
+            self._adb,
+            "wait-for-device",
+            "forward",
+            "tcp:%d" % self._port,
+            "tcp:7102"
         ])
 
         package_name, main_activity = self._main_activity(apk)
@@ -334,9 +336,9 @@ class AndroidLibrary(object):
         Halts a previously started Android Emulator.
         '''
 
-        assert self._testserver_proc != None, 'Tried to stop a previously started test server, but it was not started.'
+        assert self._testserver_proc is not None, 'Tried to stop a previously started test server, but it was not started.'
 
-        response = self._request("get",urljoin(self._url, 'kill'))
+        response = self._request("get", urljoin(self._url, 'kill'))
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
         assert response.text == 'Affirmative!', "InstrumentationBackend replied '%s', expected 'Affirmative'" % response.text
@@ -347,25 +349,23 @@ class AndroidLibrary(object):
         Application. Performs a handshake.
         '''
 
-        response = self._request("get",urljoin(self._url, 'ping'))
+        response = self._request("get", urljoin(self._url, 'ping'))
 
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
         assert response.text == 'pong', "InstrumentationBackend replied '%s', expected 'pong'" % response.text
 
     def _perform_action(self, command, *arguments):
         action = json.dumps({
-          "command": command,
-          "arguments": arguments,
+            "command": command,
+            "arguments": arguments,
         })
 
         logging.debug(">> %r", action)
         url = self._url
-        response = self._request("post",url,
-          data=action,
-          headers={
-            'Content-Type': 'application/json'
-          },
-        )
+        response = self._request("post", url, data=action,
+                                 headers={
+                                     'Content-Type': 'application/json'
+                                 },)
 
         logging.error("<< %r", url)
         logging.error("<< %r", response.text)
@@ -403,7 +403,7 @@ class AndroidLibrary(object):
         '''
 
         path, link = self._get_screenshot_paths(filename)
-        response = self._request("get",urljoin(self._url, 'screenshot'))
+        response = self._request("get", urljoin(self._url, 'screenshot'))
 
         with open(path, 'w') as f:
             f.write(response.content)
@@ -412,7 +412,7 @@ class AndroidLibrary(object):
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
 
         logger.info('</td></tr><tr><td colspan="3"><a href="%s">'
-                   '<img src="%s"></a>' % (link, link), True, False)
+                    '<img src="%s"></a>' % (link, link), True, False)
 
     def screen_should_contain(self, text):
         '''
@@ -421,8 +421,8 @@ class AndroidLibrary(object):
         `text` String that should be on the current screen
         '''
         result = self._perform_action("assert_text", text, True)
-        assert result["success"] == True, "Screen does not contain text '%s': %s" % (
-                text, result.get('message', 'No specific error message given'))
+        assert result["success"] is True, "Screen does not contain text '%s': %s" % (
+            text, result.get('message', 'No specific error message given'))
 
     def screen_should_not_contain(self, text):
         '''
@@ -431,8 +431,8 @@ class AndroidLibrary(object):
         `text` String that should not be on the current screen
         '''
         result = self._perform_action("assert_text", text, False)
-        assert result["success"] == True, "Screen does contain text '%s', but shouldn't have: %s" % (
-                text, result.get('message', 'No specific error message given'))
+        assert result["success"] is True, "Screen does contain text '%s', but shouldn't have: %s" % (
+            text, result.get('message', 'No specific error message given'))
 
     def touch_button(self, text):
         '''
@@ -441,8 +441,8 @@ class AndroidLibrary(object):
         `text` is the text the button that will be clicked contains
         '''
         result = self._perform_action("press_button_with_text", text)
-        assert result["success"] == True, "Touching button failed '%s': %s" % (
-                text, result.get('message', 'No specific error message given'))
+        assert result["success"] is True, "Touching button failed '%s': %s" % (
+            text, result.get('message', 'No specific error message given'))
 
     def touch_text(self, text):
         '''
@@ -451,29 +451,29 @@ class AndroidLibrary(object):
         `text` is the text the button that will be clicked contains
         '''
         result = self._perform_action("click_on_text", text)
-        assert result["success"] == True, "Touching text '%s' failed: %s" % (
-                text, result.get('message', 'No specific error message given'))
+        assert result["success"] is True, "Touching text '%s' failed: %s" % (
+            text, result.get('message', 'No specific error message given'))
 
     def scroll_up(self):
         '''
         Scroll up
         '''
         result = self._perform_action("scroll_up")
-        assert result["success"] == True, "Scrolling up failed '%s': %s" % (
-                result.text, result.get('message', 'No specific error message given'))
+        assert result["success"] is True, "Scrolling up failed '%s': %s" % (
+            result.text, result.get('message', 'No specific error message given'))
 
     def scroll_down(self):
         '''
         Scroll down
         '''
         result = self._perform_action("scroll_down")
-        assert result["success"] == True, "Scrolling down failed '%s': %s" % (
-                result.text, result.get('message', 'No specific error message given'))
+        assert result["success"] is True, "Scrolling down failed '%s': %s" % (
+            result.text, result.get('message', 'No specific error message given'))
 
     def _split_locator(self, locator, default_strategy="css"):
         try:
             strategy, query = locator.split("=")
-        except ValueError, e:
+        except ValueError:
             strategy = default_strategy
             query = locator
             logging.debug("No explicit locator strategy set, using '%s'" % strategy)
@@ -489,7 +489,7 @@ class AndroidLibrary(object):
         strategy, query = self._split_locator(locator)
         result = self._perform_action("set_text", strategy, query, value)
 
-        assert result["success"] == True, "Setting webview text failed '%r'" % result
+        assert result["success"] is True, "Setting webview text failed '%r'" % result
 
     def touch_webview_element(self, locator):
         '''
@@ -499,7 +499,7 @@ class AndroidLibrary(object):
         '''
         strategy, query = self._split_locator(locator)
         result = self._perform_action("touch", strategy, query)
-        assert result["success"] == True, "Touching Webview element failed: '%r'" % result
+        assert result["success"] is True, "Touching Webview element failed: '%r'" % result
 
     def webview_scroll_to(self, locator):
         '''
@@ -508,7 +508,7 @@ class AndroidLibrary(object):
         '''
         strategy, query = self._split_locator(locator)
         result = self._perform_action("scroll_to", strategy, query)
-        assert result["success"] == True, "Scrolling to Webview element failed: '%r'" % result
+        assert result["success"] is True, "Scrolling to Webview element failed: '%r'" % result
 
     def set_text(self, locator, value):
         '''
@@ -524,23 +524,23 @@ class AndroidLibrary(object):
         if strategy in ("num", ):
             try:
                 query = int(query, 10)
-            except ValueError, e:
+            except ValueError:
                 raise AssertionError("Could not convert '%s' to integer, but required for '%s' locator strategy" % (
-                  query, strategy
+                    query, strategy
                 ))
 
         api_names = {
-          'num':  'enter_text_into_numbered_field',
-          'name': 'enter_text_into_named_field',
+            'num':  'enter_text_into_numbered_field',
+            'name': 'enter_text_into_named_field',
         }
 
         assert strategy in api_names.keys(), 'Locator strategy must be one of "%s", but was %s' % (
-          '", "'.join(api_names.keys()), strategy
+            '", "'.join(api_names.keys()), strategy
         )
 
         result = self._perform_action(api_names[strategy], value, query)
 
-        assert result["success"] == True, "Setting the text failed: %s" % result
+        assert result["success"] is True, "Setting the text failed: %s" % result
 
     def webview_should_contain(self, text):
         '''
@@ -548,7 +548,7 @@ class AndroidLibrary(object):
 
         `text` the text the webview should contain
         '''
-        r = self._perform_action("query","css","html")
+        r = self._perform_action("query", "css", "html")
         c = json.loads(r["message"])
         assert text in c[0]["textContent"], "Webview does not contain: %s" % text
 
@@ -558,14 +558,14 @@ class AndroidLibrary(object):
         '''
         result = self._perform_action('swipe', 'left')
 
-        assert result["success"] == True, "Swiping left failed: %s" % result
+        assert result["success"] is True, "Swiping left failed: %s" % result
 
     def swipe_right(self):
         '''
         Performs a swipe gesture to the right
         '''
         result = self._perform_action('swipe', 'right')
-        assert result["success"] == True, "Swiping right failed: %s" % result
+        assert result["success"] is True, "Swiping right failed: %s" % result
 
     def touch_view(self, locator):
         '''
@@ -575,7 +575,7 @@ class AndroidLibrary(object):
         '''
         strategy, query = self._split_locator(locator, "desc")
         result = self._perform_action('click_on_view_by_description', query)
-        assert result["success"] == True, "Click on view failed: %s" % result
+        assert result["success"] is True, "Click on view failed: %s" % result
 
     def touch_image_button(self, locator):
         '''
@@ -589,12 +589,12 @@ class AndroidLibrary(object):
         if strategy == "num":
             try:
                 query = int(query, 10)
-            except ValueError, e:
+            except ValueError:
                 raise AssertionError("Could not convert '%s' to integer, but required for '%s' locator strategy" % (
-                  query, strategy
+                    query, strategy
                 ))
         elif strategy == "desc":
             action = "press_image_button_description"
 
         result = self._perform_action(action, query)
-        assert result["success"] == True, "Touching image button failed: %s" % result
+        assert result["success"] is True, "Touching image button failed: %s" % result

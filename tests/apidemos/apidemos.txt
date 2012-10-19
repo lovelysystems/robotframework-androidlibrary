@@ -19,7 +19,7 @@ Setup Suite
     Press Menu Button
 
 Setup Test
-    Start Testserver              com.example.android.apis
+    Start Testserver with apk       ApiDemos.apk
 
     Wait Until Keyword Succeeds
     ...  1min

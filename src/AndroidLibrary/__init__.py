@@ -316,7 +316,7 @@ class AndroidLibrary(object):
         ]
         self._testserver_proc = subprocess.Popen(args)
 
-    def _main_activity(self, apk):
+    def _main_activity_from_apk(self, apk):
         '''
         Returns the package_name and the Main-Action
         from a given apk

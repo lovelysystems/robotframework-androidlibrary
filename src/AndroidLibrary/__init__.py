@@ -207,7 +207,7 @@ class AndroidLibrary(object):
 
     def set_device_endpoint(self, host='localhost', port=34777):
         """
-        (deprecated) Use 'Set Device Url' instead.
+        *DEPRECATED* Use 'Set Device Url' instead.
 
         Set the device endpoint where the application is started.
         If not set the endpoint defaults to 'localhost:34777'.

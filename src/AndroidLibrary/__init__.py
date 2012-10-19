@@ -323,7 +323,9 @@ class AndroidLibrary(object):
         '''
         rc, output, errput = self._execute_with_timeout(["calabash-android", "extract-manifest", apk])
         xmldoc = minidom.parseString(output)
-        manifest = xmldoc.getElementsByTagName("manifest")[0]
+        manifest = xmldoc.getElementsByTagName("manifest")
+        assert len(manifest)>0, "No <manifest> tag found in manifest file"
+        manifest = manifest[0]
         package = manifest.getAttribute("package")
         assert package is not None, "Could not find package name in apk: %s manifest: %s" % (apk, output)
         for node in xmldoc.getElementsByTagName("action"):

@@ -308,7 +308,7 @@ class AndroidLibrary(object):
             package_name,
             "-e",
             "main_activity",
-            "%s%s" % (package_name, main_activity),
+            "%s.%s" % (package_name, main_activity),
             "-e",
             "class",
             "sh.calaba.instrumentationbackend.InstrumentationBackend",

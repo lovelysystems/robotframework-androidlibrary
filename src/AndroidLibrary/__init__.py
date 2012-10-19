@@ -233,8 +233,8 @@ class AndroidLibrary(object):
 
     def start_testserver(self, package_name):
         '''
-        (deprecated) Use 'Start TestServer with apk' instead.
-        Does not work with calabash-android >= 3.0
+        *DEPRECATED* Use 'Start TestServer with apk' instead.
+        Does not work with calabash-android >= 0.3.0
 
         Start the remote test server inside the Android Application.
 
@@ -274,7 +274,7 @@ class AndroidLibrary(object):
 
     def start_testserver_with_apk(self, apk):
         '''
-        Works only with calabash-android >= 3.0
+        Works only with calabash-android >= 0.3.0
         Start the remote test server
 
         `apk` path to the apk to controll

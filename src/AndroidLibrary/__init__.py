@@ -263,7 +263,6 @@ class AndroidLibrary(object):
             "shell",
             "am",
             "instrument",
-            "-w",
             "-e",
             "class",
             "sh.calaba.instrumentationbackend.InstrumentationBackend",

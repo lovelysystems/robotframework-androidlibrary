@@ -295,7 +295,8 @@ class AndroidLibrary(object):
             "tcp:7102"
         ])
 
-        package_name, main_activity = self._main_activity(apk)
+        package_name, main_activity = self._main_activity_from_apk(apk)
+        main_activity = main_activity.lstrip('.')
         args = [
             self._adb,
             "shell",

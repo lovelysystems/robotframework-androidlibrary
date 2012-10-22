@@ -293,11 +293,9 @@ class AndroidLibrary(object):
             "tcp:%d" % self._port,
             "tcp:7102"
         ])
-
         package_name, main_activity = self._main_activity_from_apk(apk)
-        main_activity = main_activity.lstrip('.')
-        if '.' not in main_activity:
-            main_activity = "%s.%s" % (package_name, main_activity)
+        if '.' not in main_activity or main_activity[0] == '.':
+            main_activity = "%s.%s" % (package_name, main_activity.lstrip('.'))
         args = [
             self._adb,
             "shell",

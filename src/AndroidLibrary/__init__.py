@@ -296,6 +296,8 @@ class AndroidLibrary(object):
 
         package_name, main_activity = self._main_activity_from_apk(apk)
         main_activity = main_activity.lstrip('.')
+        if '.' not in main_activity:
+            main_activity = "%s.%s" % (package_name, main_activity)
         args = [
             self._adb,
             "shell",
@@ -307,7 +309,7 @@ class AndroidLibrary(object):
             package_name,
             "-e",
             "main_activity",
-            "%s.%s" % (package_name, main_activity),
+            main_activity,
             "-e",
             "class",
             "sh.calaba.instrumentationbackend.InstrumentationBackend",
@@ -323,7 +325,7 @@ class AndroidLibrary(object):
         rc, output, errput = self._execute_with_timeout(["calabash-android", "extract-manifest", apk])
         xmldoc = minidom.parseString(output)
         manifest = xmldoc.getElementsByTagName("manifest")
-        assert len(manifest)>0, "No <manifest> tag found in manifest file"
+        assert len(manifest) > 0, "No <manifest> tag found in manifest file"
         manifest = manifest[0]
         package = manifest.getAttribute("package")
         assert package is not None, "Could not find package name in apk: %s manifest: %s" % (apk, output)

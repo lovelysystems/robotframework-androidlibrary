@@ -42,8 +42,8 @@ class AndroidLibrary(object):
         self._testserver_proc = None
         self._username = None
         self._password = None
-        self._calabash = self._env_command(['calabash-android.bat',
-                                            'calabash-android'])
+        self._calabash_bin_path = self._env_command(['calabash-android.bat',
+                                                     'calabash-android'])
 
     def _sdk_path(self, paths):
         for path in paths:
@@ -330,7 +330,7 @@ class AndroidLibrary(object):
         Returns the package_name and the Main-Action
         from a given apk
         '''
-        rc, output, errput = self._execute_with_timeout([self._calabash, "extract-manifest", apk])
+        rc, output, errput = self._execute_with_timeout([self._calabash_bin_path, "extract-manifest", apk])
         xmldoc = minidom.parseString(output)
         manifest = xmldoc.getElementsByTagName("manifest")
         assert len(manifest) > 0, "No <manifest> tag found in manifest file"

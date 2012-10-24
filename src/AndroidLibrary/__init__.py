@@ -43,7 +43,7 @@ class AndroidLibrary(object):
         self._username = None
         self._password = None
         self._calabash = self._env_command(['calabash-android.bat',
-                                            'calabash-android'],"calabash-android")
+                                            'calabash-android'], "calabash-android")
 
     def _sdk_path(self, paths):
         for path in paths:

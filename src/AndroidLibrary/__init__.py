@@ -43,7 +43,7 @@ class AndroidLibrary(object):
         self._username = None
         self._password = None
         self._calabash = self._env_command(['calabash-android.bat',
-                                            'calabash-android'], "calabash-android")
+                                            'calabash-android'])
 
     def _sdk_path(self, paths):
         for path in paths:
@@ -56,13 +56,13 @@ class AndroidLibrary(object):
             os.path.splitext(os.path.split(complete_path)[1])[0],
             os.path.split(complete_path)[0],))
 
-    def _env_command(self, commands, err=""):
+    def _env_command(self, commands):
         for path in os.environ["PATH"].split(os.pathsep):
             for command in commands:
                 exe_file = os.path.join(path, command)
                 if os.path.isfile(exe_file):
                     return exe_file
-        raise AssertionError("Couldn't find binary %s" % err)
+        raise AssertionError("Couldn't find binary %s" % os.path.commonprefix(commands))
 
     def _request(self, method, url, *args, **kwargs):
 

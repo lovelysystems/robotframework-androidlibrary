@@ -473,6 +473,19 @@ class AndroidLibrary(object):
         assert result["success"] is True, "Scrolling up failed '%s': %s" % (
             result.text, result.get('message', 'No specific error message given'))
 
+    def touch_position(self, percent_left, percent_top):
+        '''
+        Touch a position on the screen
+
+        `percent_left` is the position from the left in percent of the total screen width
+        `percent_right` is the position from the top in percent of the total screen height
+        '''
+        percent_left = int(percent_left)
+        percent_right = int(percent_right)
+        result = self._perform_action("click_on_screen", percent_left, percent_right)
+        assert result["success"] is True, "Touching position failed '%s': %s" % (
+            result.text, result.get('message', 'No specific error message given'))
+
     def scroll_down(self):
         '''
         Scroll down

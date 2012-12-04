@@ -410,17 +410,32 @@ class AndroidLibrary(object):
 
         Also works in headless environments.
 
-        `filename` Location where the screenshot will be saved.
+        This keyword might fail if the instrumentation backend is unable to
+        make a screenshot at the given point in time.
+
+        If you want to try again making a screenshot, you want to wrap this like
+
+        | Wait Until Keyword Succeeds | 20 seconds | 5 seconds | Capture Screenshot |
+
+        If you don't care about the screenshot (as it is a nice-to-have
+        addition to your test report but not neccessary), use it like this:
+
+        | Run Keyword And Ignore Error | Capture Screenshot |
+
+        `filename` Location where the screenshot will be saved (optional).
         '''
 
         path, link = self._get_screenshot_paths(filename)
         response = self._request("get", urljoin(self._url, 'screenshot'))
 
+        if response.status_code == 500:
+            raise AssertionError("Unable to make a screenshot, see documentation on how to handle this")
+
+        assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
+
         with open(path, 'w') as f:
             f.write(response.content)
             f.close()
-
-        assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
 
         logger.info('</td></tr><tr><td colspan="3"><a href="%s">'
                     '<img src="%s"></a>' % (link, link), True, False)

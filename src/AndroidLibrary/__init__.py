@@ -86,7 +86,7 @@ class AndroidLibrary(object):
         self._password = password
 
     def start_emulator(self, avd_name, no_window=False,
-                       language="en", country="us"):
+                       language="en", country="us", save_snapshot=False):
         '''
         Starts the Android Emulator.
 
@@ -99,6 +99,9 @@ class AndroidLibrary(object):
 
         if no_window:
             args.append('-no-window')
+
+        if not save_snapshot:
+            args.append('-no-snapshot-save')
 
         logging.debug("$> %s", ' '.join(args))
 

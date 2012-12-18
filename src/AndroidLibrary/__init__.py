@@ -86,7 +86,7 @@ class AndroidLibrary(object):
         self._password = password
 
     def start_emulator(self, avd_name, no_window=False,
-                       language="en", country="us", save_snapshot=False):
+                       language="en", country="us", save_snapshot=False, retries=3):
         '''
         Starts the Android Emulator.
 
@@ -106,6 +106,11 @@ class AndroidLibrary(object):
         logging.debug("$> %s", ' '.join(args))
 
         self._emulator_proc = subprocess.Popen(args)
+        rc, output, errput = self._execute_with_timeout([self._adb, 'wait-for-device'], max_timeout=80, max_attempts=1)
+        if rc != 0 and retries > 0:
+                self.stop_emulator()
+                logging.warn("adb did not respond, retry starting %s " % retries)
+                self.start_emulator(avd_name, no_window, language, country, save_snapshot, retries - 1)
 
     def stop_emulator(self):
         '''

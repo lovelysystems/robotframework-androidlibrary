@@ -117,9 +117,7 @@ class AndroidLibrary(object):
             return
 
         self._emulator_proc.terminate()
-        self._emulator_proc.kill()
         self._emulator_proc.wait()
-
         self._emulator_proc = None
 
     def _execute_with_timeout(self, cmd, max_attempts=3, max_timeout=120):

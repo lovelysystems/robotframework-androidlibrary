@@ -122,6 +122,7 @@ class AndroidLibrary(object):
             return
 
         self._emulator_proc.terminate()
+        self._emulator_proc.kill()
         self._emulator_proc.wait()
         self._emulator_proc = None
 

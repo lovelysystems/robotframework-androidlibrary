@@ -117,9 +117,7 @@ class AndroidLibrary(object):
             return
 
         self._emulator_proc.terminate()
-        self._emulator_proc.kill()
         self._emulator_proc.wait()
-
         self._emulator_proc = None
 
     def _execute_with_timeout(self, cmd, max_attempts=3, max_timeout=120):
@@ -496,11 +494,11 @@ class AndroidLibrary(object):
         Touch a position on the screen
 
         `percent_left` is the position from the left in percent of the total screen width
-        `percent_right` is the position from the top in percent of the total screen height
+        `percent_top` is the position from the top in percent of the total screen height
         '''
         percent_left = int(percent_left)
-        percent_right = int(percent_right)
-        result = self._perform_action("click_on_screen", percent_left, percent_right)
+        percent_top = int(percent_top)
+        result = self._perform_action("click_on_screen", percent_left, percent_top)
         assert result["success"] is True, "Touching position failed '%s': %s" % (
             result.text, result.get('message', 'No specific error message given'))
 

@@ -209,6 +209,14 @@ class AndroidLibrary(object):
         rc, output, errput = self._execute_with_timeout([self._adb, 'shell', 'input', 'keyevent', '%d' % key_code], max_attempts=1)
         assert rc == 0
 
+    def press_back_button(self):
+        '''
+        Presses the back button.
+        '''
+        result = self._perform_action("go_back")
+        assert result["success"] is True, "Could not press back button: %s" % (
+            result.get('message', 'No specific error message given'))
+
     def press_menu_button(self):
         '''
         Press the menu button ("KEYCODE_MENU"), same as '| Send Key | 82 |'

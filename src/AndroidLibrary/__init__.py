@@ -419,7 +419,7 @@ class AndroidLibrary(object):
 
     # END: STOLEN FROM SELENIUM2LIBRARY
 
-    def capture_screenshot(self, filename=None):
+    def capture_screenshot(self, filename=None, relative_url='screenshot'):
         '''
         Captures a screenshot of the current screen and embeds it in the test report
 
@@ -438,10 +438,11 @@ class AndroidLibrary(object):
         | Run Keyword And Ignore Error | Capture Screenshot |
 
         `filename` Location where the screenshot will be saved (optional).
+        `relative_url` URL part, relative to the device endpoint. For the standard setup the default value is sufficient.
         '''
 
         path, link = self._get_screenshot_paths(filename)
-        response = self._request("get", urljoin(self._url, 'screenshot'))
+        response = self._request("get", urljoin(self._url, relative_url))
 
         if response.status_code == 500:
             raise AssertionError("Unable to make a screenshot, see documentation on how to handle this")

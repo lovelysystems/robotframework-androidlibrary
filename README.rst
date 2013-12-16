@@ -18,6 +18,23 @@ To install, just fetch the latest version from PyPI::
 
     pip install --upgrade robotframework-androidlibrary
 
+
+Usage
++++++
+
+To use the library, import it at the beginning of a Robot Framework Test:
+
+============  ================
+  Setting          Value      
+============  ================
+Library       AndroidLibrary  
+============  ================
+
+Documentation
++++++++++++++
+
+The keyword documentation can be found at <http://lovelysystems.github.com/robotframework-androidlibrary/>
+
 Prepare your App
 ++++++++++++++++
 
@@ -37,8 +54,3 @@ licensed under the  `Eclipse Public License (EPL) v1.0
 
 Development by `Lovely Systems GmbH <http://www.lovelysystems.com/>`_,
 sponsored by `Axel Springer AG <http://www.axelspringer.de/>`_.
-
-Documentation
-+++++++++++++
-
-The keyword documentation could be found at <http://lovelysystems.github.com/robotframework-androidlibrary/>

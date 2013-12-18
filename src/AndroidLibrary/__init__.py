@@ -220,9 +220,9 @@ class AndroidLibrary(object):
         '''
         Presses the back button.
         '''
-        result = self._perform_action("go_back")
-        assert result["success"] is True, "Could not press back button: %s" % (
-            result.get('message', 'No specific error message given'))
+        r = self._perform_action("go_back")
+        c = json.loads(r)
+        assert c["success"] is True, "Could not press back button:: %s" % (c["message"])
 
     def press_menu_button(self):
         '''

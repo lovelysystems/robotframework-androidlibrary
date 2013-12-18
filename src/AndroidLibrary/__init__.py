@@ -86,7 +86,7 @@ class AndroidLibrary(object):
         self._password = password
 
     def start_emulator(self, avd_name, no_window=False,
-                       language="en", country="us", save_snapshot=False, retries=3):
+                       language="en", country="us", save_snapshot=False, retries=3, http_proxy=""):
         '''
         Starts the Android Emulator.
 
@@ -102,6 +102,10 @@ class AndroidLibrary(object):
 
         if not save_snapshot:
             args.append('-no-snapshot-save')
+
+        if len(http_proxy)>0:
+            args.append('-http-proxy')
+            args.append(http_proxy)
 
         logging.debug("$> %s", ' '.join(args))
 

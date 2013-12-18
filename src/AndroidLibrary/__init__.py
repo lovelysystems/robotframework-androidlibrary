@@ -339,7 +339,7 @@ class AndroidLibrary(object):
             "-e",
             "class",
             "sh.calaba.instrumentationbackend.InstrumentationBackend",
-            "sh.calaba.android.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner",
+            "%s.test/sh.calaba.instrumentationbackend.CalabashInstrumentationTestRunner" % package_name,
         ]
         self._testserver_proc = subprocess.Popen(args)
 

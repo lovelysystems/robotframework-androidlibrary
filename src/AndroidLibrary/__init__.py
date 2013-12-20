@@ -665,3 +665,4 @@ class AndroidLibrary(object):
         r = self._perform_action(action, query)
         c = json.loads(r)
         assert c["success"] is True, "Touching image '%s' failed: %s" % (locator,c["message"])
+

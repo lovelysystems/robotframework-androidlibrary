@@ -40,7 +40,7 @@ Prepare your App
 
 robotframework-androidlibrary uses calabash-android underneath. To install calabash-android (we've only tested this with v0.3.2 yet), use the following command::
 
-    gem install --version '= 0.3.2' calabash-android
+    gem install --version '= 0.4.18' calabash-android
 
 To prepare your android app look at  <https://github.com/calabash/calabash-android#installation>
 

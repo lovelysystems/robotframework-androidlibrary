@@ -402,7 +402,12 @@ class AndroidLibrary(object):
         logging.error("<< %r", url)
         logging.error("<< %r", response.text)
         assert response.status_code == 200, "InstrumentationBackend sent status %d, expected 200" % response.status_code
-        return response.text
+        try:
+            response_decoded = json.loads(response.text)
+            return response_decoded
+        except ValueError:
+            return response.text
+        return "error"
 
     # BEGIN: STOLEN FROM SELENIUM2LIBRARY
 

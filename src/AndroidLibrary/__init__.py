@@ -225,7 +225,6 @@ class AndroidLibrary(object):
         Presses the back button.
         '''
         response = self._perform_action("go_back")
-        c = json.loads(r)
         assert response["success"] is True, "Could not press back button:: %s" % (response["message"])
 
     def press_menu_button(self):
@@ -470,7 +469,6 @@ class AndroidLibrary(object):
         `text` String that should be on the current screen
         '''
         response = self._perform_action("assert_text", text, True)
-        c = json.loads(r)
         assert response["success"] is True, "Screen does not contain text '%s': %s" % (text, response["message"])
 
     def screen_should_not_contain(self, text):
@@ -480,7 +478,6 @@ class AndroidLibrary(object):
         `text` String that should not be on the current screen
         '''
         response = self._perform_action("assert_text", text, False)
-        c = json.loads(r)
         assert response["success"] is True, "Screen does contain text '%s', but shouldn't have: %s" % (text, response["message"])
 
     def touch_button(self, text):
@@ -490,7 +487,6 @@ class AndroidLibrary(object):
         `text` is the text the button that will be clicked contains
         '''
         response = self._perform_action("press_button_with_text", text)
-        c = json.loads(r)
         assert response["success"] is True, "Touching button '%s' failed: %s" % (text, response["message"])
 
     def touch_text(self, text):
@@ -500,7 +496,6 @@ class AndroidLibrary(object):
         `text` is the text the button that will be clicked contains
         '''
         response = self._perform_action("click_on_text", text)
-        c = json.loads(r)
         assert response["success"] is True, "Touching text '%s' failed: %s" % (text, response["message"])
 
     def scroll_up(self):
@@ -508,7 +503,6 @@ class AndroidLibrary(object):
         Scroll up
         '''
         response = self._perform_action("scroll_up")
-        c = json.loads(r)
         assert response["success"] is True, "Scrolling up failed: %s" % (response["message"])
 
     def touch_position(self, percent_left, percent_top):
@@ -521,7 +515,6 @@ class AndroidLibrary(object):
         percent_left = int(percent_left)
         percent_top = int(percent_top)
         response = self._perform_action("click_on_screen", percent_left, percent_top)
-        c = json.loads(r)
         assert response["success"] is True, "Touching position %s, %s failed: %s" % (percent_left, percent_top, response["message"])
 
     def scroll_down(self):
@@ -529,7 +522,6 @@ class AndroidLibrary(object):
         Scroll down
         '''
         response = self._perform_action("scroll_down")
-        c = json.loads(r)
         assert response["success"] is True, "Scrolling down failed: %s" % (response["message"])
 
     def _split_locator(self, locator, default_strategy="css"):
@@ -550,7 +542,6 @@ class AndroidLibrary(object):
         '''
         strategy, query = self._split_locator(locator)
         response = self._perform_action("set_text", strategy, query, value)
-        c = json.loads(r)
         assert response["success"] is True, "Setting webview text failed: %s" % (response["message"])
 
     def touch_webview_element(self, locator):
@@ -561,7 +552,6 @@ class AndroidLibrary(object):
         '''
         strategy, query = self._split_locator(locator)
         response = self._perform_action("touch", strategy, query)
-        c = json.loads(r)
         assert response["success"] is True, "Touching Webview element '%s' failed: %s" % (locator, response["message"])
 
     def webview_scroll_to(self, locator):
@@ -571,7 +561,6 @@ class AndroidLibrary(object):
         '''
         strategy, query = self._split_locator(locator)
         response = self._perform_action("scroll_to", strategy, query)
-        c = json.loads(r)
         assert response["success"] is True, "Scrolling to Webview element '%s' failed: %s" % (locator, response["message"])
 
     def set_text(self, locator, value):
@@ -603,7 +592,6 @@ class AndroidLibrary(object):
         )
 
         response = self._perform_action(api_names[strategy], value, query)
-        c = json.loads(r)
         assert response["success"] is True, "Setting the text '%s' failed: %s" % (locator, response["message"])
 
     def webview_should_contain(self, text):
@@ -613,7 +601,6 @@ class AndroidLibrary(object):
         `text` the text the webview should contain
         '''
         response = self._perform_action("query", "css", "html")
-        c = json.loads(r["message"])
         assert text in response[0]["textContent"], "Webview does not contain '%s': %s" % (text, response["message"])
 
     def swipe_left(self):
@@ -621,7 +608,6 @@ class AndroidLibrary(object):
         Performs a swipe gesture to the left
         '''
         response = self._perform_action('swipe', 'left')
-        c = json.loads(r)
         assert response["success"] is True, "Swiping left failed: %s" % response["message"]
 
     def swipe_right(self):
@@ -629,7 +615,6 @@ class AndroidLibrary(object):
         Performs a swipe gesture to the right
         '''
         response = self._perform_action('swipe', 'right')
-        c = json.loads(r)
         assert response["success"] is True, "Swiping right failed: %s" % response["message"]
 
     def touch_view(self, locator):
@@ -640,7 +625,6 @@ class AndroidLibrary(object):
         '''
         strategy, query = self._split_locator(locator, "desc")
         response = self._perform_action('click_on_view_by_description', query)
-        c = json.loads(r)
         assert response["success"] is True, "Click on view failed: %s" % response["message"]
 
     def touch_image_button(self, locator):
@@ -663,5 +647,4 @@ class AndroidLibrary(object):
             action = "press_image_button_description"
 
         response = self._perform_action(action, query)
-        c = json.loads(r)
         assert response["success"] is True, "Touching image '%s' failed: %s" % (locator,response["message"])
